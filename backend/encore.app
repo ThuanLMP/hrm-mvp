@@ -1,0 +1,1 @@
+{"id": "leap-app-etsi", "lang": "typescript"}
