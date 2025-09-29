@@ -52,7 +52,6 @@ const navigationSections: NavigationSection[] = [
     items: [
       { name: 'Timesheet', href: '/timesheet', icon: Clock, roles: ['admin', 'hr', 'manager', 'employee'] },
       { name: 'Nghỉ phép', href: '/leave', icon: Calendar, roles: ['admin', 'hr', 'manager', 'employee'] },
-      { name: 'Ca làm việc', href: '/shifts', icon: Briefcase, roles: ['admin', 'hr', 'manager'] },
     ]
   },
   {
