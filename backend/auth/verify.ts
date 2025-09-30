@@ -1,6 +1,6 @@
 import { api, APIError, Header } from "encore.dev/api";
+import { verifySimpleToken } from "./tokenUtils";
 import { AuthData } from "./types";
-import * as jwt from 'jsonwebtoken';
 
 interface VerifyTokenRequest {
   authorization: Header<"Authorization">;
@@ -16,7 +16,7 @@ export const verify = api<VerifyTokenRequest, AuthData>(
     }
 
     try {
-      const decoded = jwt.verify(token, 'your-secret-key') as any;
+      const decoded = verifySimpleToken(token);
       return {
         userID: decoded.userID,
         email: decoded.email,

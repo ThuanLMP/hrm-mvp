@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import backend from '~backend/client';
-import type { User } from '~backend/auth/types';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import type { User } from "~backend/auth/types";
+import backend from "~backend/client";
 
 interface AuthContextType {
   user: User | null;
@@ -15,7 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth phải được sử dụng trong AuthProvider');
+    throw new Error("useAuth phải được sử dụng trong AuthProvider");
   }
   return context;
 }
@@ -30,7 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('auth-token');
+    const savedToken = localStorage.getItem("auth-token");
     if (savedToken) {
       setToken(savedToken);
       verifyToken(savedToken);
@@ -44,20 +50,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const authData = await backend.auth.verify({
         authorization: `Bearer ${tokenToVerify}`,
       });
-      
+
       // Construct user object from auth data
       const userData: User = {
         id: parseInt(authData.userID),
         email: authData.email,
         role: authData.role,
-        created_at: new Date(), // This would normally come from the token or another API call
+        created_at: new Date(),
       };
-      
+
       setUser(userData);
+      setToken(tokenToVerify);
     } catch (error) {
-      console.error('Token verification failed:', error);
-      localStorage.removeItem('auth-token');
+      console.error("Token verification failed:", error);
+      localStorage.removeItem("auth-token");
       setToken(null);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await backend.auth.login({ email, password });
       setUser(response.user);
       setToken(response.token);
-      localStorage.setItem('auth-token', response.token);
+      localStorage.setItem("auth-token", response.token);
     } catch (error) {
       throw error;
     }
@@ -77,7 +85,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('auth-token');
+    localStorage.removeItem("auth-token");
   };
 
   return (
