@@ -35,9 +35,9 @@ export const stats = api<StatsRequest, BonusStats>(
 
     const statsQuery = `
       SELECT 
-        COALESCE(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), 0) as total_amount,
+        CAST(COALESCE(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), 0) AS TEXT) as total_amount,
         COUNT(*) as total_count,
-        COALESCE(AVG(CASE WHEN status = 'approved' THEN amount ELSE NULL END), 0) as average_amount,
+        CAST(COALESCE(AVG(CASE WHEN status = 'approved' THEN amount ELSE NULL END), 0) AS TEXT) as average_amount,
         COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
         COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
         COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count
@@ -52,27 +52,42 @@ export const stats = api<StatsRequest, BonusStats>(
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const lastMonthStats = await db.rawQueryRow<any>(`
-      SELECT COALESCE(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), 0) as last_month_amount
+    const lastMonthStats = await db.rawQueryRow<any>(
+      `
+      SELECT CAST(COALESCE(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), 0) AS TEXT) as last_month_amount
       FROM bonuses b
       WHERE b.award_date >= $1 AND b.award_date < $2
-    `, [lastMonth.toISOString().split('T')[0], currentMonth.toISOString().split('T')[0]]);
+    `,
+      lastMonth.toISOString().split("T")[0],
+      currentMonth.toISOString().split("T")[0]
+    );
 
-    const thisMonthStats = await db.rawQueryRow<any>(`
-      SELECT COALESCE(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), 0) as this_month_amount
+    const thisMonthStats = await db.rawQueryRow<any>(
+      `
+      SELECT CAST(COALESCE(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), 0) AS TEXT) as this_month_amount
       FROM bonuses b
       WHERE b.award_date >= $1
-    `, [currentMonth.toISOString().split('T')[0]]);
+    `,
+      currentMonth.toISOString().split("T")[0]
+    );
 
     let monthlyGrowth = 0;
-    if (lastMonthStats?.last_month_amount > 0) {
-      monthlyGrowth = ((thisMonthStats?.this_month_amount - lastMonthStats?.last_month_amount) / lastMonthStats?.last_month_amount) * 100;
+    const lastMonthAmount = parseFloat(
+      lastMonthStats?.last_month_amount || "0"
+    );
+    const thisMonthAmount = parseFloat(
+      thisMonthStats?.this_month_amount || "0"
+    );
+
+    if (lastMonthAmount > 0) {
+      monthlyGrowth =
+        ((thisMonthAmount - lastMonthAmount) / lastMonthAmount) * 100;
     }
 
     return {
-      totalAmount: parseFloat(currentStats?.total_amount || 0),
+      totalAmount: parseFloat(currentStats?.total_amount || "0"),
       totalCount: parseInt(currentStats?.total_count || 0),
-      averageAmount: parseFloat(currentStats?.average_amount || 0),
+      averageAmount: parseFloat(currentStats?.average_amount || "0"),
       approvedCount: parseInt(currentStats?.approved_count || 0),
       pendingCount: parseInt(currentStats?.pending_count || 0),
       rejectedCount: parseInt(currentStats?.rejected_count || 0),

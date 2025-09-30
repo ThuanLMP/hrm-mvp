@@ -1,7 +1,8 @@
 import { api, APIError, Header } from "encore.dev/api";
+import { verifySimpleToken } from "../auth/tokenUtils";
+import { toDecimalText } from "../bonus/create";
 import db from "../db";
 import { CreateCourseRequest, TrainingCourse } from "./types";
-import { verifySimpleToken } from "../auth/tokenUtils";
 
 interface CreateCourseRequestWithAuth extends CreateCourseRequest {
   authorization: Header<"Authorization">;
@@ -21,9 +22,11 @@ export const createCourse = api<CreateCourseRequestWithAuth, TrainingCourse>(
     } catch (error) {
       throw APIError.unauthenticated("Token không hợp lệ");
     }
-    
-    if (user.role !== 'admin' && user.role !== 'hr') {
-      throw APIError.permissionDenied("Only admins and HR can create training courses");
+
+    if (user.role !== "admin" && user.role !== "hr") {
+      throw APIError.permissionDenied(
+        "Only admins and HR can create training courses"
+      );
     }
 
     const { authorization, ...courseData } = req;
@@ -37,6 +40,7 @@ export const createCourse = api<CreateCourseRequestWithAuth, TrainingCourse>(
         throw APIError.notFound("Training category not found");
       }
     }
+    const totalCostText = toDecimalText(courseData.cost);
 
     const course = await db.queryRow<any>`
       INSERT INTO training_courses (
@@ -44,16 +48,30 @@ export const createCourse = api<CreateCourseRequestWithAuth, TrainingCourse>(
         start_date, end_date, location, course_type, cost, image_url, created_by
       )
       VALUES (
-        ${courseData.title}, ${courseData.description}, ${courseData.categoryId},
-        ${courseData.instructor}, ${courseData.durationHours}, ${courseData.maxParticipants},
-        ${courseData.startDate ? courseData.startDate.toISOString().split('T')[0] : null},
-        ${courseData.endDate ? courseData.endDate.toISOString().split('T')[0] : null},
+        ${courseData.title}, ${courseData.description}, ${
+      courseData.categoryId
+    },
+        ${courseData.instructor}, ${courseData.durationHours}, ${
+      courseData.maxParticipants
+    },
+        ${
+          courseData.startDate
+            ? courseData.startDate.toISOString().split("T")[0]
+            : null
+        },
+        ${
+          courseData.endDate
+            ? courseData.endDate.toISOString().split("T")[0]
+            : null
+        },
         ${courseData.location}, ${courseData.courseType}, 
-        ${courseData.cost ? courseData.cost.toString() : null}, ${courseData.imageUrl}, ${parseInt(user.userID)}
+           to_number(${totalCostText}, 'FM999999999.00'), ${
+      courseData.imageUrl
+    }, ${parseInt(user.userID)}
       )
       RETURNING 
         id, title, description, category_id, instructor, duration_hours, max_participants,
-        start_date, end_date, location, course_type, status, cost, image_url,
+        start_date, end_date, location, course_type, status, CAST(cost AS TEXT) as cost, image_url,
         created_by, created_at, updated_at
     `;
 
@@ -62,9 +80,11 @@ export const createCourse = api<CreateCourseRequestWithAuth, TrainingCourse>(
     }
 
     // Get related data
-    const categoryData = courseData.categoryId ? await db.queryRow`
+    const categoryData = courseData.categoryId
+      ? await db.queryRow`
       SELECT name FROM training_categories WHERE id = ${course.category_id}
-    ` : null;
+    `
+      : null;
 
     const creatorData = await db.queryRow`
       SELECT full_name FROM employees WHERE id = ${course.created_by}

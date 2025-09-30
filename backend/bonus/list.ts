@@ -1,6 +1,6 @@
-import { api, Query } from "encore.dev/api";
+import { api } from "encore.dev/api";
 import db from "../db";
-import { ListBonusesRequest, ListBonusesResponse, Bonus } from "./types";
+import { Bonus, ListBonusesRequest, ListBonusesResponse } from "./types";
 
 export const list = api<ListBonusesRequest, ListBonusesResponse>(
   { expose: true, method: "GET", path: "/bonuses" },
@@ -11,11 +11,18 @@ export const list = api<ListBonusesRequest, ListBonusesResponse>(
     let bonuses: Bonus[];
     let countResult: { total: number } | null;
 
-    if (req.employeeId || req.bonusTypeId || req.status || req.search || req.startDate || req.endDate) {
+    if (
+      req.employeeId ||
+      req.bonusTypeId ||
+      req.status ||
+      req.search ||
+      req.startDate ||
+      req.endDate
+    ) {
       // Apply filters
       let baseQuery = `
         SELECT 
-          b.id, b.employee_id, b.bonus_type_id, b.title, b.description, b.amount,
+          b.id, b.employee_id, b.bonus_type_id, b.title, b.description, CAST(b.amount AS TEXT) as amount,
           b.status, b.award_date, b.approved_by, b.approved_at, b.rejection_reason,
           b.created_by, b.created_at, b.updated_at,
           e.full_name as employee_name,
@@ -86,11 +93,13 @@ export const list = api<ListBonusesRequest, ListBonusesResponse>(
         paramIndex++;
       }
 
-      baseQuery += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+      baseQuery += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${
+        paramIndex + 1
+      }`;
       params.push(limit, offset);
 
       const rawBonuses = await db.rawQueryAll<any>(baseQuery, ...params);
-      bonuses = rawBonuses.map(row => ({
+      bonuses = rawBonuses.map((row) => ({
         id: row.id,
         employeeId: row.employee_id,
         employeeName: row.employee_name,
@@ -114,12 +123,15 @@ export const list = api<ListBonusesRequest, ListBonusesResponse>(
         updatedAt: row.updated_at,
       }));
 
-      countResult = await db.rawQueryRow<{ total: number }>(countQuery, ...params.slice(0, -2));
+      countResult = await db.rawQueryRow<{ total: number }>(
+        countQuery,
+        ...params.slice(0, -2)
+      );
     } else {
       // No filters - use simple queries
       const rawBonuses = await db.queryAll<any>`
         SELECT 
-          b.id, b.employee_id, b.bonus_type_id, b.title, b.description, b.amount,
+          b.id, b.employee_id, b.bonus_type_id, b.title, b.description, CAST(b.amount AS TEXT) as amount,
           b.status, b.award_date, b.approved_by, b.approved_at, b.rejection_reason,
           b.created_by, b.created_at, b.updated_at,
           e.full_name as employee_name,
@@ -138,7 +150,7 @@ export const list = api<ListBonusesRequest, ListBonusesResponse>(
         LIMIT ${limit} OFFSET ${offset}
       `;
 
-      bonuses = rawBonuses.map(row => ({
+      bonuses = rawBonuses.map((row) => ({
         id: row.id,
         employeeId: row.employee_id,
         employeeName: row.employee_name,

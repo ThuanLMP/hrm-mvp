@@ -1,6 +1,10 @@
 import { api } from "encore.dev/api";
 import db from "../db";
-import { ListCoursesRequest, ListCoursesResponse, TrainingCourse } from "./types";
+import {
+  ListCoursesRequest,
+  ListCoursesResponse,
+  TrainingCourse,
+} from "./types";
 
 export const listCourses = api<ListCoursesRequest, ListCoursesResponse>(
   { expose: true, method: "GET", path: "/training/courses" },
@@ -11,13 +15,20 @@ export const listCourses = api<ListCoursesRequest, ListCoursesResponse>(
     let courses: TrainingCourse[];
     let countResult: { total: number } | null;
 
-    if (req.categoryId || req.status || req.courseType || req.search || req.startDate || req.endDate) {
+    if (
+      req.categoryId ||
+      req.status ||
+      req.courseType ||
+      req.search ||
+      req.startDate ||
+      req.endDate
+    ) {
       // Apply filters
       let baseQuery = `
         SELECT 
           c.id, c.title, c.description, c.category_id, c.instructor,
           c.duration_hours, c.max_participants, c.start_date, c.end_date,
-          c.location, c.course_type, c.status, c.cost, c.image_url,
+          c.location, c.course_type, c.status, CAST(c.cost AS TEXT) as cost, c.image_url,
           c.created_by, c.created_at, c.updated_at,
           cat.name as category_name,
           creator.full_name as created_by_name,
@@ -71,22 +82,24 @@ export const listCourses = api<ListCoursesRequest, ListCoursesResponse>(
       if (req.startDate) {
         baseQuery += ` AND c.start_date >= $${paramIndex}`;
         countQuery += ` AND c.start_date >= $${paramIndex}`;
-        params.push(req.startDate.toISOString().split('T')[0]);
+        params.push(req.startDate.toISOString().split("T")[0]);
         paramIndex++;
       }
 
       if (req.endDate) {
         baseQuery += ` AND c.end_date <= $${paramIndex}`;
         countQuery += ` AND c.end_date <= $${paramIndex}`;
-        params.push(req.endDate.toISOString().split('T')[0]);
+        params.push(req.endDate.toISOString().split("T")[0]);
         paramIndex++;
       }
 
-      baseQuery += ` GROUP BY c.id, cat.name, creator.full_name ORDER BY c.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+      baseQuery += ` GROUP BY c.id, cat.name, creator.full_name ORDER BY c.created_at DESC LIMIT $${paramIndex} OFFSET $${
+        paramIndex + 1
+      }`;
       params.push(limit, offset);
 
       const rawCourses = await db.rawQueryAll<any>(baseQuery, ...params);
-      courses = rawCourses.map(row => ({
+      courses = rawCourses.map((row) => ({
         id: row.id,
         title: row.title,
         description: row.description,
@@ -110,14 +123,17 @@ export const listCourses = api<ListCoursesRequest, ListCoursesResponse>(
         updatedAt: row.updated_at,
       }));
 
-      countResult = await db.rawQueryRow<{ total: number }>(countQuery, ...params.slice(0, -2));
+      countResult = await db.rawQueryRow<{ total: number }>(
+        countQuery,
+        ...params.slice(0, -2)
+      );
     } else {
       // No filters
       const rawCourses = await db.queryAll<any>`
         SELECT 
           c.id, c.title, c.description, c.category_id, c.instructor,
           c.duration_hours, c.max_participants, c.start_date, c.end_date,
-          c.location, c.course_type, c.status, c.cost, c.image_url,
+          c.location, c.course_type, c.status, CAST(c.cost AS TEXT) as cost, c.image_url,
           c.created_by, c.created_at, c.updated_at,
           cat.name as category_name,
           creator.full_name as created_by_name,
@@ -132,7 +148,7 @@ export const listCourses = api<ListCoursesRequest, ListCoursesResponse>(
         LIMIT ${limit} OFFSET ${offset}
       `;
 
-      courses = rawCourses.map(row => ({
+      courses = rawCourses.map((row) => ({
         id: row.id,
         title: row.title,
         description: row.description,

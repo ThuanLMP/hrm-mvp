@@ -1,11 +1,35 @@
 import { api, APIError, Header } from "encore.dev/api";
-import db from "../db";
-import { CreateBonusRequest, Bonus } from "./types";
 import { verifySimpleToken } from "../auth/tokenUtils";
+import db from "../db";
+import { Bonus, CreateBonusRequest } from "./types";
 
 interface CreateBonusRequestWithAuth extends CreateBonusRequest {
   authorization: Header<"Authorization">;
 }
+
+export const toDecimalNumber = (value: unknown): number => {
+  if (typeof value === "number") {
+    if (!isFinite(value)) throw new Error("Invalid decimal input");
+    return Math.round(value * 100) / 100;
+  }
+  if (typeof value === "bigint") {
+    const n = Number(value);
+    if (!isFinite(n)) throw new Error("Invalid bigint decimal input");
+    return Math.round(n * 100) / 100;
+  }
+  if (typeof value === "string") {
+    const n = Number(value.trim());
+    if (!isFinite(n)) throw new Error(`Invalid decimal string: ${value}`);
+    return Math.round(n * 100) / 100;
+  }
+  throw new Error(`Invalid decimal input type: ${typeof value}`);
+};
+
+export const toDecimalText = (value: unknown): string => {
+  const n = toDecimalNumber(value);
+  // đảm bảo đúng định dạng thập phân có 2 chữ số
+  return n.toFixed(2);
+};
 
 export const create = api<CreateBonusRequestWithAuth, Bonus>(
   { expose: true, method: "POST", path: "/bonuses" },
@@ -21,8 +45,8 @@ export const create = api<CreateBonusRequestWithAuth, Bonus>(
     } catch (error) {
       throw APIError.unauthenticated("Token không hợp lệ");
     }
-    
-    if (user.role !== 'admin' && user.role !== 'hr') {
+
+    if (user.role !== "admin" && user.role !== "hr") {
       throw APIError.permissionDenied("Only admins and HR can create bonuses");
     }
 
@@ -44,17 +68,29 @@ export const create = api<CreateBonusRequestWithAuth, Bonus>(
       throw APIError.notFound("Bonus type not found");
     }
 
+    const employeeId = Number(bonusData.employeeId);
+    const bonusTypeId = Number(bonusData.bonusTypeId);
+    const title = String(bonusData.title);
+    const description = bonusData.description ?? null;
+    const totalAmountText = toDecimalText(bonusData.amount);
+    const awardDate = bonusData.awardDate.toISOString().slice(0, 10);
+    const createdBy = Number(user.userID);
     const bonus = await db.queryRow<any>`
       INSERT INTO bonuses (
         employee_id, bonus_type_id, title, description, amount, award_date, created_by
       )
       VALUES (
-        ${bonusData.employeeId}, ${bonusData.bonusTypeId}, ${bonusData.title}, 
-        ${bonusData.description}, ${bonusData.amount.toString()}, 
-        ${bonusData.awardDate.toISOString().split('T')[0]}, ${parseInt(user.userID)}
+        ${employeeId},
+        ${bonusTypeId},
+        ${title},
+        ${description},
+        to_number(${totalAmountText}, 'FM999999999.00'),
+        ${awardDate},
+        ${createdBy}
       )
       RETURNING 
-        id, employee_id, bonus_type_id, title, description, amount,
+        id, employee_id, bonus_type_id, title, description, 
+        CAST(amount AS TEXT) as amount,
         status, award_date, approved_by, approved_at, rejection_reason,
         created_by, created_at, updated_at
     `;
