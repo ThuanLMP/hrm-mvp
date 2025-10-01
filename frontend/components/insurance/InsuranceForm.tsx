@@ -1,15 +1,25 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
-import backend from '~backend/client';
-import type { CreateInsuranceRequest, UpdateInsuranceRequest, InsuranceWithEmployee } from '~backend/insurance/types';
-import type { Employee } from '~backend/employee/types';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { useEffect, useState } from "react";
+import backend from "~backend/client";
+import type { Employee } from "~backend/employee/types";
+import type {
+  CreateInsuranceRequest,
+  InsuranceWithEmployee,
+  UpdateInsuranceRequest,
+} from "~backend/insurance/types";
 
 interface InsuranceFormProps {
   record?: InsuranceWithEmployee;
@@ -17,29 +27,39 @@ interface InsuranceFormProps {
   onCancel: () => void;
 }
 
-export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProps) {
+export function InsuranceForm({
+  record,
+  onSuccess,
+  onCancel,
+}: InsuranceFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [formData, setFormData] = useState({
     employee_id: record?.employee_id || 0,
-    company_unit: record?.company_unit || '',
-    contract_date: record?.contract_date ? new Date(record.contract_date).toISOString().split('T')[0] : '',
-    id_number: record?.id_number || '',
-    id_issue_date: record?.id_issue_date ? new Date(record.id_issue_date).toISOString().split('T')[0] : '',
-    id_issue_place: record?.id_issue_place || '',
-    cccd_expiry_date: record?.cccd_expiry_date ? new Date(record.cccd_expiry_date).toISOString().split('T')[0] : '',
-    household_registration: record?.household_registration || '',
-    place_of_origin: record?.place_of_origin || '',
-    tax_code: record?.tax_code || '',
-    social_insurance_number: record?.social_insurance_number || '',
-    bank_account: record?.bank_account || '',
-    bank_name: record?.bank_name || '',
-    marital_status: record?.marital_status || 'single' as const,
+    company_unit: record?.company_unit || "",
+    contract_date: record?.contract_date
+      ? new Date(record.contract_date).toISOString().split("T")[0]
+      : "",
+    id_number: record?.id_number || "",
+    id_issue_date: record?.id_issue_date
+      ? new Date(record.id_issue_date).toISOString().split("T")[0]
+      : "",
+    id_issue_place: record?.id_issue_place || "",
+    cccd_expiry_date: record?.cccd_expiry_date
+      ? new Date(record.cccd_expiry_date).toISOString().split("T")[0]
+      : "",
+    household_registration: record?.household_registration || "",
+    place_of_origin: record?.place_of_origin || "",
+    tax_code: record?.tax_code || "",
+    social_insurance_number: record?.social_insurance_number || "",
+    bank_account: record?.bank_account || "",
+    bank_name: record?.bank_name || "",
+    marital_status: record?.marital_status || ("single" as const),
     number_of_children: record?.number_of_children || 0,
     is_shared: record?.is_shared || false,
-    status: record?.status || 'active' as const,
-    notes: record?.notes || ''
+    status: record?.status || ("active" as const),
+    notes: record?.notes || "",
   });
 
   useEffect(() => {
@@ -51,11 +71,11 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
       const response = await backend.employee.list({ limit: 1000 });
       setEmployees(response.employees);
     } catch (error) {
-      console.error('Failed to load employees:', error);
+      console.error("Failed to load employees:", error);
       toast({
         title: "Lỗi",
         description: "Không thể tải danh sách nhân viên",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -67,31 +87,40 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
     try {
       const data = {
         ...formData,
-        contract_date: formData.contract_date ? new Date(formData.contract_date) : undefined,
-        id_issue_date: formData.id_issue_date ? new Date(formData.id_issue_date) : undefined,
-        cccd_expiry_date: formData.cccd_expiry_date ? new Date(formData.cccd_expiry_date) : undefined,
+        contract_date: formData.contract_date
+          ? new Date(formData.contract_date)
+          : undefined,
+        id_issue_date: formData.id_issue_date
+          ? new Date(formData.id_issue_date)
+          : undefined,
+        cccd_expiry_date: formData.cccd_expiry_date
+          ? new Date(formData.cccd_expiry_date)
+          : undefined,
       };
 
       if (record) {
-        await backend.insurance.update({ id: record.id, ...data as UpdateInsuranceRequest });
+        await backend.insurance.update({
+          id: record.id,
+          ...(data as UpdateInsuranceRequest),
+        });
         toast({
           title: "Thành công",
-          description: "Cập nhật hồ sơ bảo hiểm thành công"
+          description: "Cập nhật hồ sơ bảo hiểm thành công",
         });
       } else {
         await backend.insurance.create(data as CreateInsuranceRequest);
         toast({
-          title: "Thành công", 
-          description: "Tạo hồ sơ bảo hiểm thành công"
+          title: "Thành công",
+          description: "Tạo hồ sơ bảo hiểm thành công",
         });
       }
       onSuccess();
     } catch (error) {
-      console.error('Error saving insurance record:', error);
+      console.error("Error saving insurance record:", error);
       toast({
         title: "Lỗi",
         description: "Không thể lưu hồ sơ bảo hiểm",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -99,10 +128,10 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="mx-auto">
       <CardHeader>
         <CardTitle>
-          {record ? 'Chỉnh sửa hồ sơ bảo hiểm' : 'Tạo hồ sơ bảo hiểm mới'}
+          {record ? "Chỉnh sửa hồ sơ bảo hiểm" : "Tạo hồ sơ bảo hiểm mới"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -112,7 +141,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Label htmlFor="employee_id">Nhân viên *</Label>
               <Select
                 value={formData.employee_id.toString()}
-                onValueChange={(value) => setFormData({ ...formData, employee_id: parseInt(value) })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, employee_id: parseInt(value) })
+                }
                 disabled={!!record}
               >
                 <SelectTrigger>
@@ -120,7 +151,10 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id.toString()}>
+                    <SelectItem
+                      key={employee.id}
+                      value={employee.id.toString()}
+                    >
                       {employee.employee_code} - {employee.full_name}
                     </SelectItem>
                   ))}
@@ -133,7 +167,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Input
                 id="company_unit"
                 value={formData.company_unit}
-                onChange={(e) => setFormData({ ...formData, company_unit: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, company_unit: e.target.value })
+                }
                 required
               />
             </div>
@@ -144,7 +180,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
                 id="contract_date"
                 type="date"
                 value={formData.contract_date}
-                onChange={(e) => setFormData({ ...formData, contract_date: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, contract_date: e.target.value })
+                }
               />
             </div>
 
@@ -153,7 +191,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Input
                 id="id_number"
                 value={formData.id_number}
-                onChange={(e) => setFormData({ ...formData, id_number: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, id_number: e.target.value })
+                }
               />
             </div>
 
@@ -163,7 +203,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
                 id="id_issue_date"
                 type="date"
                 value={formData.id_issue_date}
-                onChange={(e) => setFormData({ ...formData, id_issue_date: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, id_issue_date: e.target.value })
+                }
               />
             </div>
 
@@ -172,7 +214,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Input
                 id="id_issue_place"
                 value={formData.id_issue_place}
-                onChange={(e) => setFormData({ ...formData, id_issue_place: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, id_issue_place: e.target.value })
+                }
               />
             </div>
 
@@ -182,7 +226,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
                 id="cccd_expiry_date"
                 type="date"
                 value={formData.cccd_expiry_date}
-                onChange={(e) => setFormData({ ...formData, cccd_expiry_date: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, cccd_expiry_date: e.target.value })
+                }
               />
             </div>
 
@@ -191,7 +237,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Input
                 id="place_of_origin"
                 value={formData.place_of_origin}
-                onChange={(e) => setFormData({ ...formData, place_of_origin: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, place_of_origin: e.target.value })
+                }
               />
             </div>
 
@@ -200,7 +248,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Input
                 id="tax_code"
                 value={formData.tax_code}
-                onChange={(e) => setFormData({ ...formData, tax_code: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, tax_code: e.target.value })
+                }
               />
             </div>
 
@@ -209,7 +259,12 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Input
                 id="social_insurance_number"
                 value={formData.social_insurance_number}
-                onChange={(e) => setFormData({ ...formData, social_insurance_number: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    social_insurance_number: e.target.value,
+                  })
+                }
               />
             </div>
 
@@ -218,7 +273,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Input
                 id="bank_account"
                 value={formData.bank_account}
-                onChange={(e) => setFormData({ ...formData, bank_account: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, bank_account: e.target.value })
+                }
               />
             </div>
 
@@ -227,7 +284,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Input
                 id="bank_name"
                 value={formData.bank_name}
-                onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, bank_name: e.target.value })
+                }
               />
             </div>
 
@@ -235,9 +294,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Label htmlFor="marital_status">Tình trạng hôn nhân</Label>
               <Select
                 value={formData.marital_status}
-                onValueChange={(value: 'single' | 'married' | 'divorced' | 'widowed') => 
-                  setFormData({ ...formData, marital_status: value })
-                }
+                onValueChange={(
+                  value: "single" | "married" | "divorced" | "widowed"
+                ) => setFormData({ ...formData, marital_status: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -258,7 +317,12 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
                 type="number"
                 min="0"
                 value={formData.number_of_children}
-                onChange={(e) => setFormData({ ...formData, number_of_children: parseInt(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    number_of_children: parseInt(e.target.value) || 0,
+                  })
+                }
               />
             </div>
 
@@ -266,7 +330,7 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
               <Label htmlFor="status">Trạng thái</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value: 'active' | 'inactive' | 'suspended') => 
+                onValueChange={(value: "active" | "inactive" | "suspended") =>
                   setFormData({ ...formData, status: value })
                 }
               >
@@ -287,7 +351,12 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
             <Textarea
               id="household_registration"
               value={formData.household_registration}
-              onChange={(e) => setFormData({ ...formData, household_registration: e.target.value })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  household_registration: e.target.value,
+                })
+              }
               rows={2}
             />
           </div>
@@ -297,7 +366,9 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
               rows={3}
             />
           </div>
@@ -306,14 +377,16 @@ export function InsuranceForm({ record, onSuccess, onCancel }: InsuranceFormProp
             <Checkbox
               id="is_shared"
               checked={formData.is_shared}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_shared: !!checked })}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, is_shared: !!checked })
+              }
             />
             <Label htmlFor="is_shared">Dùng chung</Label>
           </div>
 
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={loading}>
-              {loading ? 'Đang lưu...' : 'Lưu'}
+              {loading ? "Đang lưu..." : "Lưu"}
             </Button>
             <Button type="button" variant="outline" onClick={onCancel}>
               Hủy

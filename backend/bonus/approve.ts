@@ -1,6 +1,6 @@
 import { api, APIError, Header } from "encore.dev/api";
-import db from "../db";
 import { verifySimpleToken } from "../auth/tokenUtils";
+import db from "../db";
 
 interface ApproveBonusRequest {
   id: number;
@@ -16,7 +16,7 @@ export const approve = api<ApproveBonusRequest, ApproveResponse>(
   { expose: true, method: "POST", path: "/bonuses/:id/approve" },
   async (req) => {
     const { id, approvedBy, authorization } = req;
-    
+
     const token = authorization?.replace("Bearer ", "");
     if (!token) {
       throw APIError.unauthenticated("Token không hợp lệ");
@@ -28,9 +28,11 @@ export const approve = api<ApproveBonusRequest, ApproveResponse>(
     } catch (error) {
       throw APIError.unauthenticated("Token không hợp lệ");
     }
-    
-    if (user.role !== 'admin' && user.role !== 'hr') {
-      throw APIError.permissionDenied("Only admins and HR can approve bonuses");
+
+    if (user.role !== "admin" && user.role !== "manager") {
+      throw APIError.permissionDenied(
+        "Only admins and manager can approve bonuses"
+      );
     }
 
     // Check if bonus exists and is pending
@@ -40,7 +42,7 @@ export const approve = api<ApproveBonusRequest, ApproveResponse>(
     if (!bonus) {
       throw APIError.notFound("Bonus not found");
     }
-    if (bonus.status !== 'pending') {
+    if (bonus.status !== "pending") {
       throw APIError.failedPrecondition("Bonus is not pending approval");
     }
 

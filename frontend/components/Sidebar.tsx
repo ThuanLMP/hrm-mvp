@@ -1,25 +1,23 @@
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileUser,
-  Building2,
-  Clock, 
-  Calendar, 
-  Briefcase,
-  Target,
-  DollarSign,
-  Shield,
-  FileText,
-  UserCheck,
-  MessageSquare,
-  GraduationCap,
+import { cn } from "@/lib/utils";
+import {
   BarChart3,
+  Building2,
+  Calendar,
+  Clock,
+  DollarSign,
+  FileText,
+  GraduationCap,
+  LayoutDashboard,
+  MapPin,
+  MessageSquare,
   Settings,
-  MapPin
-} from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { cn } from '@/lib/utils';
+  Shield,
+  Target,
+  UserCheck,
+  Users,
+} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 interface NavigationItem {
   name: string;
@@ -35,50 +33,125 @@ interface NavigationSection {
 
 const navigationSections: NavigationSection[] = [
   {
-    title: '',
+    title: "",
     items: [
-      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'director', 'hr', 'manager'] },
-    ]
+      {
+        name: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+        roles: ["admin", "director", "hr", "manager"],
+      },
+    ],
   },
   {
-    title: 'QUẢN LÝ NHÂN VIÊN',
+    title: "QUẢN LÝ NHÂN VIÊN",
     items: [
-      { name: 'Danh sách nhân viên', href: '/employees', icon: Users, roles: ['admin', 'hr', 'manager'] },
-      { name: 'Phòng ban', href: '/departments', icon: Building2, roles: ['admin', 'hr', 'manager'] },
-    ]
+      {
+        name: "Danh sách nhân viên",
+        href: "/employees",
+        icon: Users,
+        roles: ["admin", "hr", "manager"],
+      },
+      {
+        name: "Phòng ban",
+        href: "/departments",
+        icon: Building2,
+        roles: ["admin", "hr", "manager"],
+      },
+    ],
   },
   {
-    title: 'CHẤM CÔNG',
+    title: "CHẤM CÔNG",
     items: [
-      { name: 'Timesheet', href: '/timesheet', icon: Clock, roles: ['admin', 'hr', 'manager', 'employee'] },
-      { name: 'Nghỉ phép', href: '/leave', icon: Calendar, roles: ['admin', 'hr', 'manager', 'employee'] },
-    ]
+      {
+        name: "Timesheet",
+        href: "/timesheet",
+        icon: Clock,
+        roles: ["admin", "hr", "manager", "employee"],
+      },
+      {
+        name: "Nghỉ phép",
+        href: "/leave",
+        icon: Calendar,
+        roles: ["admin", "hr", "manager", "employee"],
+      },
+    ],
   },
   {
-    title: 'LƯƠNG & PHÚC LỢI',
+    title: "LƯƠNG & PHÚC LỢI",
     items: [
-      { name: 'Bảng lương', href: '/payroll', icon: DollarSign, roles: ['admin', 'hr'] },
-      { name: 'Thưởng', href: '/bonus', icon: Target, roles: ['admin', 'hr'] },
-      { name: 'Bảo hiểm', href: '/insurance', icon: Shield, roles: ['admin', 'hr'] },
-    ]
+      {
+        name: "Bảng lương",
+        href: "/payroll",
+        icon: DollarSign,
+        roles: ["admin", "hr"],
+      },
+      {
+        name: "Thưởng",
+        href: "/bonus",
+        icon: Target,
+        roles: ["admin", "manager"],
+      },
+      {
+        name: "Bảo hiểm",
+        href: "/insurance",
+        icon: Shield,
+        roles: ["admin", "hr"],
+      },
+    ],
   },
   {
-    title: 'TUYỂN DỤNG',
+    title: "TUYỂN DỤNG",
     items: [
-      { name: 'Đăng tin tuyển dụng', href: '/recruitment', icon: FileText, roles: ['admin', 'hr'] },
-      { name: 'Ứng viên', href: '/candidates', icon: UserCheck, roles: ['admin', 'hr'] },
-      { name: 'Phỏng vấn', href: '/interviews', icon: MessageSquare, roles: ['admin', 'hr'] },
-      { name: 'Đào tạo & Phát triển', href: '/training', icon: GraduationCap, roles: ['admin', 'hr', 'manager'] },
-      { name: 'Báo cáo & Thống kê', href: '/reports', icon: BarChart3, roles: ['admin', 'director', 'hr'] },
-    ]
+      {
+        name: "Đăng tin tuyển dụng",
+        href: "/recruitment",
+        icon: FileText,
+        roles: ["admin", "hr"],
+      },
+      {
+        name: "Ứng viên",
+        href: "/candidates",
+        icon: UserCheck,
+        roles: ["admin", "hr"],
+      },
+      {
+        name: "Phỏng vấn",
+        href: "/interviews",
+        icon: MessageSquare,
+        roles: ["admin", "hr"],
+      },
+      {
+        name: "Đào tạo & Phát triển",
+        href: "/training",
+        icon: GraduationCap,
+        roles: ["admin", "hr", "manager"],
+      },
+      {
+        name: "Báo cáo & Thống kê",
+        href: "/reports",
+        icon: BarChart3,
+        roles: ["admin", "director", "hr"],
+      },
+    ],
   },
   {
-    title: 'CÀI ĐẶT',
+    title: "CÀI ĐẶT",
     items: [
-      { name: 'Cấu hình hệ thống', href: '/config', icon: Settings, roles: ['admin'] },
-      { name: 'Quản lý khu vực', href: '/regions', icon: MapPin, roles: ['admin'] },
-    ]
-  }
+      {
+        name: "Cấu hình hệ thống",
+        href: "/config",
+        icon: Settings,
+        roles: ["admin"],
+      },
+      {
+        name: "Quản lý khu vực",
+        href: "/regions",
+        icon: MapPin,
+        roles: ["admin"],
+      },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -86,12 +159,14 @@ export function Sidebar() {
   const { user } = useAuth();
 
   const getFilteredSections = () => {
-    return navigationSections.map(section => ({
-      ...section,
-      items: section.items.filter(item => 
-        user && item.roles.includes(user.role)
-      )
-    })).filter(section => section.items.length > 0);
+    return navigationSections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter(
+          (item) => user && item.roles.includes(user.role)
+        ),
+      }))
+      .filter((section) => section.items.length > 0);
   };
 
   return (
@@ -100,7 +175,7 @@ export function Sidebar() {
         <Building2 className="h-8 w-8 text-blue-600" />
         <span className="ml-2 text-xl font-bold text-gray-900">HR System</span>
       </div>
-      
+
       <nav className="flex-1 overflow-y-auto py-4">
         {getFilteredSections().map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-6">
@@ -113,8 +188,10 @@ export function Sidebar() {
             )}
             <div className="space-y-1 px-3">
               {section.items.map((item) => {
-                const isActive = location.pathname === item.href || 
-                                (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+                const isActive =
+                  location.pathname === item.href ||
+                  (item.href !== "/dashboard" &&
+                    location.pathname.startsWith(item.href));
                 return (
                   <Link
                     key={item.name}
@@ -126,12 +203,14 @@ export function Sidebar() {
                         : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                     )}
                   >
-                    <item.icon className={cn(
-                      "mr-3 h-4 w-4 transition-colors",
-                      isActive 
-                        ? "text-blue-600" 
-                        : "text-gray-400 group-hover:text-gray-600"
-                    )} />
+                    <item.icon
+                      className={cn(
+                        "mr-3 h-4 w-4 transition-colors",
+                        isActive
+                          ? "text-blue-600"
+                          : "text-gray-400 group-hover:text-gray-600"
+                      )}
+                    />
                     <span className="truncate">{item.name}</span>
                   </Link>
                 );
