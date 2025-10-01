@@ -1,53 +1,68 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Plus, Building2, Users, Edit, Trash2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { useBackend } from '../hooks/useBackend';
-import { useAuth } from '../contexts/AuthContext';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2, Edit, Plus, Trash2, Users } from "lucide-react";
+import { useState } from "react";
+import { DepartmentEmployeesModal } from "../components/departments/DepartmentEmployeesModal";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { useAuth } from "../contexts/AuthContext";
+import { useBackend } from "../hooks/useBackend";
 
 export function DepartmentsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<any>(null);
+  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+  const [isEmployeesModalOpen, setIsEmployeesModalOpen] = useState(false);
   const backend = useBackend();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    manager_id: '',
+    name: "",
+    description: "",
+    manager_id: "",
   });
 
   const { data: departments, isLoading } = useQuery({
-    queryKey: ['departments'],
+    queryKey: ["departments"],
     queryFn: () => backend.department.list(),
   });
 
   const { data: employees } = useQuery({
-    queryKey: ['employees'],
+    queryKey: ["employees"],
     queryFn: () => backend.employee.list({ limit: 100 }),
   });
+
+  // Query để lấy nhân viên của phòng ban được chọn
+  const { data: departmentEmployees, isLoading: isLoadingDepartmentEmployees } =
+    useQuery({
+      queryKey: ["department-employees", selectedDepartment?.id],
+      queryFn: () =>
+        backend.employee.list({
+          limit: 100,
+          department_id: selectedDepartment?.id,
+        }),
+      enabled: !!selectedDepartment?.id,
+    });
 
   const createMutation = useMutation({
     mutationFn: (data: any) => backend.department.create(data),
@@ -56,12 +71,12 @@ export function DepartmentsPage() {
         title: "Thành công",
         description: "Phòng ban đã được tạo thành công",
       });
-      queryClient.invalidateQueries({ queryKey: ['departments'] });
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
       setIsCreateOpen(false);
       resetForm();
     },
     onError: (error: any) => {
-      console.error('Create department error:', error);
+      console.error("Create department error:", error);
       toast({
         title: "Lỗi",
         description: error?.message || "Không thể tạo phòng ban",
@@ -77,12 +92,12 @@ export function DepartmentsPage() {
         title: "Thành công",
         description: "Phòng ban đã được cập nhật",
       });
-      queryClient.invalidateQueries({ queryKey: ['departments'] });
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
       setEditingDepartment(null);
       resetForm();
     },
     onError: (error: any) => {
-      console.error('Update department error:', error);
+      console.error("Update department error:", error);
       toast({
         title: "Lỗi",
         description: error?.message || "Không thể cập nhật phòng ban",
@@ -98,10 +113,10 @@ export function DepartmentsPage() {
         title: "Thành công",
         description: "Phòng ban đã được xóa",
       });
-      queryClient.invalidateQueries({ queryKey: ['departments'] });
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
     },
     onError: (error: any) => {
-      console.error('Delete department error:', error);
+      console.error("Delete department error:", error);
       toast({
         title: "Lỗi",
         description: error?.message || "Không thể xóa phòng ban",
@@ -110,22 +125,25 @@ export function DepartmentsPage() {
     },
   });
 
-  const canManage = user?.role === 'admin' || user?.role === 'hr';
+  const canManage = user?.role === "admin" || user?.role === "hr";
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
-      manager_id: '',
+      name: "",
+      description: "",
+      manager_id: "",
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const submitData = {
       ...formData,
-      manager_id: formData.manager_id && formData.manager_id !== 'none' ? parseInt(formData.manager_id) : undefined,
+      manager_id:
+        formData.manager_id && formData.manager_id !== "none"
+          ? parseInt(formData.manager_id)
+          : undefined,
     };
 
     if (editingDepartment) {
@@ -141,8 +159,8 @@ export function DepartmentsPage() {
   const handleEdit = (department: any) => {
     setFormData({
       name: department.name,
-      description: department.description || '',
-      manager_id: department.manager_id?.toString() || '',
+      description: department.description || "",
+      manager_id: department.manager_id?.toString() || "",
     });
     setEditingDepartment(department);
   };
@@ -151,6 +169,16 @@ export function DepartmentsPage() {
     if (confirm(`Bạn có chắc chắn muốn xóa phòng ban "${name}"?`)) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleViewEmployees = (department: any) => {
+    setSelectedDepartment(department);
+    setIsEmployeesModalOpen(true);
+  };
+
+  const handleCloseEmployeesModal = () => {
+    setIsEmployeesModalOpen(false);
+    setSelectedDepartment(null);
   };
 
   if (isLoading) {
@@ -165,13 +193,15 @@ export function DepartmentsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý phòng ban</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Quản lý phòng ban
+          </h1>
           <p className="text-gray-600">Danh sách và thông tin các phòng ban</p>
         </div>
-        
+
         {canManage && (
-          <Dialog 
-            open={isCreateOpen || editingDepartment} 
+          <Dialog
+            open={isCreateOpen || editingDepartment}
             onOpenChange={(open) => {
               if (!open) {
                 setIsCreateOpen(false);
@@ -191,7 +221,9 @@ export function DepartmentsPage() {
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>
-                  {editingDepartment ? 'Chỉnh sửa phòng ban' : 'Thêm phòng ban mới'}
+                  {editingDepartment
+                    ? "Chỉnh sửa phòng ban"
+                    : "Thêm phòng ban mới"}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -200,7 +232,9 @@ export function DepartmentsPage() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     required
                   />
                 </div>
@@ -210,16 +244,23 @@ export function DepartmentsPage() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                     rows={3}
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="manager_id">Trưởng phòng</Label>
-                  <Select 
-                    value={formData.manager_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, manager_id: value }))}
+                  <Select
+                    value={formData.manager_id}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, manager_id: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn trưởng phòng" />
@@ -227,7 +268,10 @@ export function DepartmentsPage() {
                     <SelectContent>
                       <SelectItem value="none">Không có</SelectItem>
                       {employees?.employees.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id.toString()}>
+                        <SelectItem
+                          key={employee.id}
+                          value={employee.id.toString()}
+                        >
                           {employee.full_name} ({employee.employee_code})
                         </SelectItem>
                       ))}
@@ -236,9 +280,9 @@ export function DepartmentsPage() {
                 </div>
 
                 <div className="flex justify-end space-x-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => {
                       setIsCreateOpen(false);
                       setEditingDepartment(null);
@@ -247,14 +291,17 @@ export function DepartmentsPage() {
                   >
                     Hủy
                   </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={createMutation.isPending || updateMutation.isPending}
-                  >
-                    {createMutation.isPending || updateMutation.isPending 
-                      ? 'Đang lưu...' 
-                      : editingDepartment ? 'Cập nhật' : 'Tạo mới'
+                  <Button
+                    type="submit"
+                    disabled={
+                      createMutation.isPending || updateMutation.isPending
                     }
+                  >
+                    {createMutation.isPending || updateMutation.isPending
+                      ? "Đang lưu..."
+                      : editingDepartment
+                      ? "Cập nhật"
+                      : "Tạo mới"}
                   </Button>
                 </div>
               </form>
@@ -265,7 +312,10 @@ export function DepartmentsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {departments?.departments.map((department) => (
-          <Card key={department.id} className="hover:shadow-md transition-shadow">
+          <Card
+            key={department.id}
+            className="hover:shadow-md transition-shadow"
+          >
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -285,7 +335,9 @@ export function DepartmentsPage() {
                       variant="ghost"
                       size="sm"
                       className="text-red-600 hover:text-red-700"
-                      onClick={() => handleDelete(department.id, department.name)}
+                      onClick={() =>
+                        handleDelete(department.id, department.name)
+                      }
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -300,21 +352,36 @@ export function DepartmentsPage() {
                     {department.description}
                   </p>
                 )}
-                
-                <div className="flex items-center text-sm text-gray-500">
-                  <Users className="h-4 w-4 mr-2" />
-                  <span>{department.employee_count || 0} nhân viên</span>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Users className="h-4 w-4 mr-2" />
+                    <span>{department.employee_count || 0} nhân viên</span>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewEmployees(department)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    Xem nhân viên
+                  </Button>
                 </div>
-                
+
                 {department.manager_name && (
                   <div className="text-sm">
                     <span className="text-gray-500">Trưởng phòng: </span>
-                    <span className="font-medium">{department.manager_name}</span>
+                    <span className="font-medium">
+                      {department.manager_name}
+                    </span>
                   </div>
                 )}
-                
+
                 <div className="text-xs text-gray-400">
-                  Tạo: {new Date(department.created_at).toLocaleDateString('vi-VN')}
+                  Tạo:{" "}
+                  {new Date(department.created_at).toLocaleDateString("vi-VN")}
                 </div>
               </div>
             </CardContent>
@@ -335,6 +402,15 @@ export function DepartmentsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Modal hiển thị nhân viên của phòng ban */}
+      <DepartmentEmployeesModal
+        isOpen={isEmployeesModalOpen}
+        onClose={handleCloseEmployeesModal}
+        department={selectedDepartment}
+        employees={departmentEmployees?.employees || []}
+        isLoading={isLoadingDepartmentEmployees}
+      />
     </div>
   );
 }
