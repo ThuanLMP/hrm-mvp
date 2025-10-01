@@ -5,9 +5,9 @@ import { LoginRequest, LoginResponse, User } from "./types";
 // Simple JWT-like token creation for MVP
 // In production, use a proper JWT library or Encore.ts auth
 function createSimpleToken(payload: any): string {
-  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
-  const data = Buffer.from(JSON.stringify(payload)).toString('base64');
-  const signature = Buffer.from(`${header}.${data}.secret`).toString('base64');
+  const header = JSON.stringify({ alg: "HS256", typ: "JWT" });
+  const data = JSON.stringify(payload);
+  const signature = `${header}.${data}.secret`;
   return `${header}.${data}.${signature}`;
 }
 
@@ -21,14 +21,23 @@ export const login = api<LoginRequest, LoginResponse>(
       password_hash: string;
       role: string;
       created_at: Date;
+      status: string;
     }>`
-      SELECT id, email, password_hash, role, created_at 
-      FROM users 
-      WHERE email = ${req.email}
+      SELECT u.id, u.email, u.password_hash, u.role, u.created_at, e.status
+      FROM users u
+      LEFT JOIN employees e ON u.id = e.user_id
+      WHERE u.email = ${req.email}
     `;
 
     if (!userRow) {
       throw APIError.unauthenticated("Email hoặc mật khẩu không đúng");
+    }
+
+    // Check if employee is still active (not terminated)
+    if (userRow.status && userRow.status !== "active") {
+      throw APIError.unauthenticated(
+        "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên."
+      );
     }
 
     // For MVP, we'll skip password verification
@@ -50,7 +59,7 @@ export const login = api<LoginRequest, LoginResponse>(
       userID: user.id.toString(),
       email: user.email,
       role: user.role,
-      exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+      exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
 
     return { user, token };

@@ -1,55 +1,69 @@
-import { useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Plus, Search, Users, Eye, Edit, Trash2, User } from 'lucide-react';
-import { useBackend } from '../hooks/useBackend';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { EmployeeForm } from '../components/employees/EmployeeForm';
-import { EmployeeDetail } from '../components/employees/EmployeeDetail';
-import { useAuth } from '../contexts/AuthContext';
+} from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { Edit, Eye, Plus, Search, User, Users } from "lucide-react";
+import { useState } from "react";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import { EmployeeDetail } from "../components/employees/EmployeeDetail";
+import { EmployeeForm } from "../components/employees/EmployeeForm";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { useAuth } from "../contexts/AuthContext";
+import { useBackend } from "../hooks/useBackend";
 
 function EmployeeList() {
-  const [search, setSearch] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [regionFilter, setRegionFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [regionFilter, setRegionFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
   const backend = useBackend();
   const { user } = useAuth();
 
   const { data: employees, isLoading } = useQuery({
-    queryKey: ['employees', search, departmentFilter, regionFilter, statusFilter],
-    queryFn: () => backend.employee.list({
-      search: search || undefined,
-      department_id: departmentFilter && departmentFilter !== 'all' ? parseInt(departmentFilter) : undefined,
-      region_id: regionFilter && regionFilter !== 'all' ? parseInt(regionFilter) : undefined,
-      status: statusFilter && statusFilter !== 'all' ? statusFilter : undefined,
-      limit: 100,
-    }),
+    queryKey: [
+      "employees",
+      search,
+      departmentFilter,
+      regionFilter,
+      statusFilter,
+    ],
+    queryFn: () =>
+      backend.employee.list({
+        search: search || undefined,
+        department_id:
+          departmentFilter && departmentFilter !== "all"
+            ? parseInt(departmentFilter)
+            : undefined,
+        region_id:
+          regionFilter && regionFilter !== "all"
+            ? parseInt(regionFilter)
+            : undefined,
+        status:
+          statusFilter && statusFilter !== "all" ? statusFilter : undefined,
+        limit: 100,
+      }),
   });
 
   const { data: departments } = useQuery({
-    queryKey: ['departments'],
+    queryKey: ["departments"],
     queryFn: () => backend.department.list(),
   });
 
   const { data: regions } = useQuery({
-    queryKey: ['regions'],
+    queryKey: ["regions"],
     queryFn: () => backend.region.list(),
   });
 
-  const canManageEmployees = user?.role === 'admin' || user?.role === 'hr';
+  const canManageEmployees = user?.role === "admin" || user?.role === "hr";
 
   if (isLoading) {
     return (
@@ -61,19 +75,19 @@ function EmployeeList() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      active: 'default',
-      inactive: 'secondary',
-      terminated: 'destructive',
+      active: "default",
+      inactive: "secondary",
+      terminated: "destructive",
     } as const;
-    
+
     const labels = {
-      active: 'Đang làm việc',
-      inactive: 'Tạm nghỉ',
-      terminated: 'Đã nghỉ việc',
+      active: "Đang làm việc",
+      inactive: "Tạm nghỉ",
+      terminated: "Đã nghỉ việc",
     };
 
     return (
-      <Badge variant={variants[status as keyof typeof variants] || 'default'}>
+      <Badge variant={variants[status as keyof typeof variants] || "default"}>
         {labels[status as keyof typeof labels] || status}
       </Badge>
     );
@@ -83,11 +97,13 @@ function EmployeeList() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý nhân viên</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Quản lý nhân viên
+          </h1>
           <p className="text-gray-600">Danh sách và thông tin nhân viên</p>
         </div>
         {canManageEmployees && (
-          <Button onClick={() => navigate('/employees/new')}>
+          <Button onClick={() => navigate("/employees/new")}>
             <Plus className="h-4 w-4 mr-2" />
             Thêm nhân viên
           </Button>
@@ -112,8 +128,11 @@ function EmployeeList() {
                 className="pl-10"
               />
             </div>
-            
-            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+
+            <Select
+              value={departmentFilter}
+              onValueChange={setDepartmentFilter}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn phòng ban" />
               </SelectTrigger>
@@ -153,13 +172,13 @@ function EmployeeList() {
               </SelectContent>
             </Select>
 
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
-                setSearch('');
-                setDepartmentFilter('all');
-                setRegionFilter('all');
-                setStatusFilter('all');
+                setSearch("");
+                setDepartmentFilter("all");
+                setRegionFilter("all");
+                setStatusFilter("all");
               }}
             >
               Xóa bộ lọc
@@ -170,9 +189,7 @@ function EmployeeList() {
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            Danh sách nhân viên ({employees?.total || 0})
-          </CardTitle>
+          <CardTitle>Danh sách nhân viên ({employees?.total || 0})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -191,7 +208,9 @@ function EmployeeList() {
               <tbody>
                 {employees?.employees.map((employee) => (
                   <tr key={employee.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium">{employee.employee_code}</td>
+                    <td className="py-3 px-4 font-medium">
+                      {employee.employee_code}
+                    </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-3">
                         {employee.photo_url ? (
@@ -200,7 +219,9 @@ function EmployeeList() {
                             alt={employee.full_name}
                             className="w-8 h-8 rounded-full object-cover"
                             onError={(e) => {
-                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(employee.full_name)}&background=3b82f6&color=fff&size=32`;
+                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                employee.full_name
+                              )}&background=3b82f6&color=fff&size=32`;
                             }}
                           />
                         ) : (
@@ -211,9 +232,11 @@ function EmployeeList() {
                         <span>{employee.full_name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4">{employee.department_name || '-'}</td>
-                    <td className="py-3 px-4">{employee.region_name || '-'}</td>
-                    <td className="py-3 px-4">{employee.position || '-'}</td>
+                    <td className="py-3 px-4">
+                      {employee.department_name || "-"}
+                    </td>
+                    <td className="py-3 px-4">{employee.region_name || "-"}</td>
+                    <td className="py-3 px-4">{employee.position || "-"}</td>
                     <td className="py-3 px-4">
                       {getStatusBadge(employee.status)}
                     </td>
@@ -231,16 +254,11 @@ function EmployeeList() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => navigate(`/employees/${employee.id}/edit`)}
+                              onClick={() =>
+                                navigate(`/employees/${employee.id}/edit`)
+                              }
                             >
                               <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </>
                         )}
@@ -250,7 +268,7 @@ function EmployeeList() {
                 ))}
               </tbody>
             </table>
-            
+
             {employees?.employees.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 Không tìm thấy nhân viên nào
