@@ -1,6 +1,6 @@
 import { api, Query } from "encore.dev/api";
 import db from "../db";
-import { Timesheet, ListTimesheetsResponse } from "./types";
+import { ListTimesheetsResponse, Timesheet } from "./types";
 
 interface ListTimesheetsRequest {
   limit?: Query<number>;
@@ -63,52 +63,65 @@ export const list = api<ListTimesheetsRequest, ListTimesheetsResponse>(
 
     params.push(limit, offset);
 
-    const rawTimesheets = await db.rawQueryAll<Timesheet & { work_start_time?: string, work_end_time?: string }>(query, ...params);
-    const countResult = await db.rawQueryRow<{ total: number }>(countQuery, ...params.slice(0, -2));
+    const rawTimesheets = await db.rawQueryAll<
+      Timesheet & { work_start_time?: string; work_end_time?: string }
+    >(query, ...params);
+    const countResult = await db.rawQueryRow<{ total: number }>(
+      countQuery,
+      ...params.slice(0, -2)
+    );
 
     // Process timesheets to calculate attendance status
-    const timesheets = rawTimesheets.map(timesheet => {
-      const workStartTime = timesheet.work_start_time || '07:00:00';
-      const workEndTime = timesheet.work_end_time || '17:00:00';
-      
-      let checkin_status: 'on_time' | 'late' = 'on_time';
-      let checkout_status: 'on_time' | 'early_leave' = 'on_time';
+    const timesheets = rawTimesheets.map((timesheet) => {
+      const workStartTime = timesheet.work_start_time || "08:00:00";
+      const workEndTime = timesheet.work_end_time || "17:30:00";
+
+      let checkin_status: "on_time" | "late" = "on_time";
+      let checkout_status: "on_time" | "early_leave" = "on_time";
       let late_minutes = 0;
       let early_leave_minutes = 0;
 
       if (timesheet.check_in || timesheet.check_out) {
         // Parse work start and end times
         const workDate = new Date(timesheet.work_date);
-        const [startHour, startMinute] = workStartTime.split(':').map(Number);
-        const [endHour, endMinute] = workEndTime.split(':').map(Number);
-        
+
+        const [startHour, startMinute] = workStartTime.split(":").map(Number);
+        const [endHour, endMinute] = workEndTime.split(":").map(Number);
+
         const expectedStartTime = new Date(workDate);
         expectedStartTime.setHours(startHour, startMinute, 0, 0);
-        
+
         const expectedEndTime = new Date(workDate);
         expectedEndTime.setHours(endHour, endMinute, 0, 0);
-        
+
         // Check-in status
         if (timesheet.check_in) {
           const actualCheckIn = new Date(timesheet.check_in);
           if (actualCheckIn > expectedStartTime) {
-            checkin_status = 'late';
-            late_minutes = Math.floor((actualCheckIn.getTime() - expectedStartTime.getTime()) / (1000 * 60));
+            checkin_status = "late";
+            late_minutes = Math.floor(
+              (actualCheckIn.getTime() - expectedStartTime.getTime()) /
+                (1000 * 60)
+            );
           }
         }
-        
+
         // Check-out status
         if (timesheet.check_out) {
           const actualCheckOut = new Date(timesheet.check_out);
           if (actualCheckOut < expectedEndTime) {
-            checkout_status = 'early_leave';
-            early_leave_minutes = Math.floor((expectedEndTime.getTime() - actualCheckOut.getTime()) / (1000 * 60));
+            checkout_status = "early_leave";
+            early_leave_minutes = Math.floor(
+              (expectedEndTime.getTime() - actualCheckOut.getTime()) /
+                (1000 * 60)
+            );
           }
         }
       }
 
       // Remove temporary fields and return processed timesheet
-      const { work_start_time, work_end_time, ...processedTimesheet } = timesheet;
+      const { work_start_time, work_end_time, ...processedTimesheet } =
+        timesheet;
       return {
         ...processedTimesheet,
         checkin_status,

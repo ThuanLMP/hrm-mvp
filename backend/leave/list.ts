@@ -63,7 +63,10 @@ export const list = api<ListLeaveRequestsRequest, ListLeaveRequestsResponse>(
     params.push(limit, offset);
 
     const leaveRequests = await db.rawQueryAll<LeaveRequest>(query, ...params);
-    const countResult = await db.rawQueryRow<{ total: number }>(countQuery, ...params.slice(0, -2));
+    const countResult = await db.rawQueryRow<{ total: number }>(
+      countQuery,
+      ...params.slice(0, -2)
+    );
 
     return {
       leave_requests: leaveRequests,

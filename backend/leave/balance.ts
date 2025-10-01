@@ -49,28 +49,32 @@ export const getBalance = api<GetLeaveBalanceRequest, LeaveBalanceResponse>(
       }
     });
 
-    // Calculate used leave days for the year - separate queries for safety
+    // Ép primitive ngay từ đầu
+    const empId = Number(employee_id);
+    const yr = Number(year);
 
+    // Annual
     const annualResult = await db.queryRow<{ total_days_text: string }>`
-      SELECT CAST(COALESCE(SUM(total_days), 0) AS TEXT) as total_days_text
-      FROM leave_requests 
-      WHERE employee_id = ${employee_id} 
-        AND status = 'approved'
-        AND leave_type = 'annual'
-        AND EXTRACT(YEAR FROM start_date) = ${year}
-    `;
+  SELECT COALESCE(SUM(total_days), 0)::text AS total_days_text
+  FROM leave_requests
+  WHERE employee_id = ${empId}::int
+    AND status = 'approved'
+    AND leave_type = 'annual'
+    AND EXTRACT(YEAR FROM start_date)::int = ${yr}::int
+`;
 
+    // Sick
     const sickResult = await db.queryRow<{ total_days_text: string }>`
-      SELECT CAST(COALESCE(SUM(total_days), 0) AS TEXT) as total_days_text
-      FROM leave_requests 
-      WHERE employee_id = ${employee_id} 
-        AND status = 'approved'
-        AND leave_type = 'sick'
-        AND EXTRACT(YEAR FROM start_date) = ${year}
-    `;
+  SELECT COALESCE(SUM(total_days), 0)::text AS total_days_text
+  FROM leave_requests
+  WHERE employee_id = ${empId}::int
+    AND status = 'approved'
+    AND leave_type = 'sick'
+    AND EXTRACT(YEAR FROM start_date)::int = ${yr}::int
+`;
 
-    const annualLeaveUsed = parseInt(annualResult?.total_days_text || "0") || 0;
-    const sickLeaveUsed = parseInt(sickResult?.total_days_text || "0") || 0;
+    const annualLeaveUsed = Number(annualResult?.total_days_text ?? "0");
+    const sickLeaveUsed = Number(sickResult?.total_days_text ?? "0");
 
     const balance: LeaveBalance = {
       employee_id: employee.id,
