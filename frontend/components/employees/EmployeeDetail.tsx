@@ -7,6 +7,7 @@ import {
   Briefcase,
   Building2,
   Calendar,
+  CreditCard,
   Edit,
   Map,
   MapPin,
@@ -44,6 +45,26 @@ export function EmployeeDetail() {
   const { data: insuranceData, isLoading: insuranceLoading } = useQuery({
     queryKey: ["employee-insurance", id],
     queryFn: () => backend.insurance.list({ employee_id: parseInt(id!) }),
+    enabled: Boolean(id),
+  });
+
+  // Get leave balance for current year
+  const { data: leaveBalance } = useQuery({
+    queryKey: ["leave-balance", id],
+    queryFn: () => backend.leave.getBalance({ employee_id: parseInt(id!) }),
+    enabled: Boolean(id),
+  });
+
+  // Get current month payroll for attendance data
+  const currentDate = new Date();
+  const { data: payrollData } = useQuery({
+    queryKey: ["payroll-current", id],
+    queryFn: () =>
+      backend.payroll.calculateMonthly({
+        employee_id: parseInt(id!),
+        month: currentDate.getMonth() + 1,
+        year: currentDate.getFullYear(),
+      }),
     enabled: Boolean(id),
   });
 
@@ -188,6 +209,40 @@ export function EmployeeDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Statistics Card */}
+          <Card className="mt-5">
+            <CardHeader>
+              <CardTitle>Thống kê</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {(leaveBalance as any)?.annual_leave_used || 0}
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Ngày nghỉ phép đã dùng
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {(payrollData as any)?.payroll_records?.[0]?.work_days || 0}
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Ngày làm việc tháng này
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {(payrollData as any)?.payroll_records?.[0]?.late_count ||
+                      0}
+                  </div>
+                  <p className="text-sm text-gray-600">Lần đi muộn tháng này</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="lg:col-span-2">
@@ -313,59 +368,203 @@ export function EmployeeDetail() {
                   <div className="space-y-4">
                     {insuranceData.records.map((insurance) => (
                       <div key={insurance.id} className="border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label>Mã hồ sơ</Label>
-                            <p className="font-medium">{insurance.id}</p>
-                          </div>
-                          <div>
-                            <Label>Đơn vị</Label>
-                            <p className="font-medium">
-                              {insurance.company_unit}
-                            </p>
-                          </div>
-                          {insurance.social_insurance_number && (
+                        {/* Basic Information */}
+                        <div className="mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                            <Building2 className="h-4 w-4 mr-2" />
+                            Thông tin cơ bản
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <Label>Số sổ bảo hiểm</Label>
+                              <Label>Mã hồ sơ</Label>
+                              <p className="font-medium">{insurance.id}</p>
+                            </div>
+                            <div>
+                              <Label>Đơn vị</Label>
                               <p className="font-medium">
-                                {insurance.social_insurance_number}
+                                {insurance.company_unit}
                               </p>
                             </div>
-                          )}
-                          {insurance.tax_code && (
+                            {insurance.contract_date && (
+                              <div>
+                                <Label>Ngày ký HĐLĐ</Label>
+                                <p className="font-medium">
+                                  {formatDate(insurance.contract_date)}
+                                </p>
+                              </div>
+                            )}
                             <div>
-                              <Label>Mã số thuế</Label>
+                              <Label>Ngày tạo</Label>
                               <p className="font-medium">
-                                {insurance.tax_code}
+                                {formatDate(insurance.date_created)}
                               </p>
                             </div>
-                          )}
-                          {insurance.id_number && (
                             <div>
-                              <Label>CMND/CCCD</Label>
-                              <p className="font-medium">
-                                {insurance.id_number}
-                              </p>
+                              <Label>Trạng thái</Label>
+                              <Badge
+                                variant={
+                                  insurance.status === "active"
+                                    ? "default"
+                                    : "secondary"
+                                }
+                              >
+                                {insurance.status === "active"
+                                  ? "Đang hoạt động"
+                                  : insurance.status === "inactive"
+                                  ? "Không hoạt động"
+                                  : "Tạm ngưng"}
+                              </Badge>
                             </div>
-                          )}
-                          <div>
-                            <Label>Trạng thái</Label>
-                            <Badge
-                              variant={
-                                insurance.status === "active"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              {insurance.status === "active"
-                                ? "Đang hoạt động"
-                                : insurance.status === "inactive"
-                                ? "Không hoạt động"
-                                : "Tạm ngưng"}
-                            </Badge>
+                            <div>
+                              <Label>Dùng chung</Label>
+                              <Badge
+                                variant={
+                                  insurance.is_shared ? "default" : "secondary"
+                                }
+                              >
+                                {insurance.is_shared ? "Có" : "Không"}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
-                        <div className="mt-4 flex justify-end">
+
+                        {/* Personal Information */}
+                        <div className="mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                            <User className="h-4 w-4 mr-2" />
+                            Thông tin cá nhân
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {insurance.id_number && (
+                              <div>
+                                <Label>CMND/CCCD</Label>
+                                <p className="font-medium">
+                                  {insurance.id_number}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.id_issue_date && (
+                              <div>
+                                <Label>Ngày cấp</Label>
+                                <p className="font-medium">
+                                  {formatDate(insurance.id_issue_date)}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.id_issue_place && (
+                              <div>
+                                <Label>Nơi cấp</Label>
+                                <p className="font-medium">
+                                  {insurance.id_issue_place}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.cccd_expiry_date && (
+                              <div>
+                                <Label>Ngày hết hạn CCCD</Label>
+                                <p className="font-medium">
+                                  {formatDate(insurance.cccd_expiry_date)}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.household_registration && (
+                              <div>
+                                <Label>Hộ khẩu</Label>
+                                <p className="font-medium">
+                                  {insurance.household_registration}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.place_of_origin && (
+                              <div>
+                                <Label>Nguyên quán</Label>
+                                <p className="font-medium">
+                                  {insurance.place_of_origin}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.marital_status && (
+                              <div>
+                                <Label>Tình trạng hôn nhân</Label>
+                                <p className="font-medium">
+                                  {insurance.marital_status === "single"
+                                    ? "Độc thân"
+                                    : insurance.marital_status === "married"
+                                    ? "Đã kết hôn"
+                                    : insurance.marital_status === "divorced"
+                                    ? "Đã ly hôn"
+                                    : insurance.marital_status === "widowed"
+                                    ? "Góa phụ"
+                                    : insurance.marital_status}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.number_of_children !== undefined && (
+                              <div>
+                                <Label>Số con</Label>
+                                <p className="font-medium">
+                                  {insurance.number_of_children}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Insurance & Tax Information */}
+                        <div className="mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Thông tin bảo hiểm & thuế
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {insurance.social_insurance_number && (
+                              <div>
+                                <Label>Số sổ bảo hiểm</Label>
+                                <p className="font-medium">
+                                  {insurance.social_insurance_number}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.tax_code && (
+                              <div>
+                                <Label>Mã số thuế cá nhân</Label>
+                                <p className="font-medium">
+                                  {insurance.tax_code}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.bank_account && (
+                              <div>
+                                <Label>Tài khoản ngân hàng</Label>
+                                <p className="font-medium">
+                                  {insurance.bank_account}
+                                </p>
+                              </div>
+                            )}
+                            {insurance.bank_name && (
+                              <div>
+                                <Label>Tên ngân hàng</Label>
+                                <p className="font-medium">
+                                  {insurance.bank_name}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Notes */}
+                        {insurance.notes && (
+                          <div className="mb-4">
+                            <h4 className="font-semibold text-gray-900 mb-3">
+                              Ghi chú
+                            </h4>
+                            <p className="text-gray-700 bg-yellow-50 p-3 rounded-lg">
+                              {insurance.notes}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end">
                           <Button
                             variant="outline"
                             size="sm"
@@ -399,34 +598,6 @@ export function EmployeeDetail() {
                     )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Thống kê</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">0</div>
-                    <p className="text-sm text-gray-600">
-                      Ngày nghỉ phép đã dùng
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">22</div>
-                    <p className="text-sm text-gray-600">
-                      Ngày làm việc tháng này
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-600">2</div>
-                    <p className="text-sm text-gray-600">
-                      Lần đi muộn tháng này
-                    </p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>

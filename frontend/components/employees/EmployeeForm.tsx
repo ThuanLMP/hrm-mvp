@@ -85,8 +85,10 @@ export function EmployeeForm() {
           ? new Date(employee.date_of_birth).toISOString().split("T")[0]
           : "",
         hire_date: new Date(employee.hire_date).toISOString().split("T")[0],
-        termination_date: employee.termination_date
-          ? new Date(employee.termination_date).toISOString().split("T")[0]
+        termination_date: (employee as any).termination_date
+          ? new Date((employee as any).termination_date)
+              .toISOString()
+              .split("T")[0]
           : "",
         position: employee.position || "",
         department_id: employee.department_id?.toString() || "",
@@ -471,7 +473,17 @@ export function EmployeeForm() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn phòng ban" />
+                    <SelectValue placeholder="Chọn phòng ban">
+                      {formData.department_id &&
+                      formData.department_id !== "none"
+                        ? departments?.departments.find(
+                            (dept) =>
+                              dept.id.toString() === formData.department_id
+                          )?.name || "Chọn phòng ban"
+                        : formData.department_id === "none"
+                        ? "Không có"
+                        : "Chọn phòng ban"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Không có</SelectItem>
@@ -493,7 +505,16 @@ export function EmployeeForm() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn khu vực" />
+                    <SelectValue placeholder="Chọn khu vực">
+                      {formData.region_id && formData.region_id !== "none"
+                        ? regions?.regions.find(
+                            (region) =>
+                              region.id.toString() === formData.region_id
+                          )?.name || "Chọn khu vực"
+                        : formData.region_id === "none"
+                        ? "Không có"
+                        : "Chọn khu vực"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Không có</SelectItem>

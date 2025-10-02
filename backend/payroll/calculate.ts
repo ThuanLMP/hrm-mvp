@@ -19,25 +19,45 @@ export const calculateMonthly = api<
 
   // Get all active employees or specific employee
 
-  const employees = await db.queryAll<{
-    id: number;
-    employee_code: string;
-    full_name: string;
-    position?: string;
-    salary_text: string;
-    department_name?: string;
-  }>`
-    SELECT 
-      e.id, e.employee_code, e.full_name, e.position, 
-      CAST(COALESCE(e.salary, 0) AS TEXT) as salary_text,
-      d.name as department_name
-    FROM employees e
-    LEFT JOIN departments d ON e.department_id = d.id
-    WHERE e.status = 'active' AND e.salary IS NOT NULL ${
-      employee_id ? `AND e.id = ${Number(employee_id)}` : ""
-    }
-    ORDER BY e.employee_code
-  `;
+  let employees;
+
+  if (employee_id) {
+    employees = await db.queryAll<{
+      id: number;
+      employee_code: string;
+      full_name: string;
+      position?: string;
+      salary_text: string;
+      department_name?: string;
+    }>`
+      SELECT 
+        e.id, e.employee_code, e.full_name, e.position, 
+        CAST(COALESCE(e.salary, 0) AS TEXT) as salary_text,
+        d.name as department_name
+      FROM employees e
+      LEFT JOIN departments d ON e.department_id = d.id
+      WHERE e.status = 'active' AND e.salary IS NOT NULL AND e.id = ${employee_id}
+      ORDER BY e.employee_code
+    `;
+  } else {
+    employees = await db.queryAll<{
+      id: number;
+      employee_code: string;
+      full_name: string;
+      position?: string;
+      salary_text: string;
+      department_name?: string;
+    }>`
+      SELECT 
+        e.id, e.employee_code, e.full_name, e.position, 
+        CAST(COALESCE(e.salary, 0) AS TEXT) as salary_text,
+        d.name as department_name
+      FROM employees e
+      LEFT JOIN departments d ON e.department_id = d.id
+      WHERE e.status = 'active' AND e.salary IS NOT NULL
+      ORDER BY e.employee_code
+    `;
+  }
 
   const payrollRecords: PayrollRecord[] = [];
 
