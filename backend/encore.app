@@ -1,1 +1,4 @@
-{"id": "leap-app-etsi", "lang": "typescript"}
+{
+	"id": "hrm-sfx2",
+	"lang": "typescript",
+}
