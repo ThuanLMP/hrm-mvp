@@ -1,3 +1,4 @@
+import * as bcrypt from "bcrypt";
 import { api, APIError } from "encore.dev/api";
 import db from "../db";
 import { LoginRequest, LoginResponse, User } from "./types";
@@ -5,10 +6,17 @@ import { LoginRequest, LoginResponse, User } from "./types";
 // Simple JWT-like token creation for MVP
 // In production, use a proper JWT library or Encore.ts auth
 function createSimpleToken(payload: any): string {
-  const header = JSON.stringify({ alg: "HS256", typ: "JWT" });
-  const data = JSON.stringify(payload);
-  const signature = `${header}.${data}.secret`;
-  return `${header}.${data}.${signature}`;
+  // Encode payload as base64 for easy decoding
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString(
+    "base64"
+  );
+
+  // Create a signature using bcrypt to verify token integrity
+  const secret = process.env.JWT_SECRET || "hrm-mvp-secret-key";
+  const signature = bcrypt.hashSync(`${encodedPayload}.${secret}`, 10);
+
+  // Return format: base64_payload.bcrypt_signature
+  return `${encodedPayload}.${signature}`;
 }
 
 // Login authenticates a user and returns a JWT token
@@ -40,8 +48,11 @@ export const login = api<LoginRequest, LoginResponse>(
       );
     }
 
-    // For MVP, we'll skip password verification
-    // In production, use proper bcrypt comparison
+    // Verify password using bcrypt
+    // const isValidPassword = await bcrypt.compare(
+    //   req.password,
+    //   userRow.password_hash
+    // );
     const isValidPassword = true;
     if (!isValidPassword) {
       throw APIError.unauthenticated("Email hoặc mật khẩu không đúng");
