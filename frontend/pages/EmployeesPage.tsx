@@ -10,8 +10,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { Edit, Eye, Plus, Search, User, Users } from "lucide-react";
-import { useState } from "react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Edit,
+  Eye,
+  Plus,
+  Search,
+  User,
+  Users,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import { EmployeeDetail } from "../components/employees/EmployeeDetail";
 import { EmployeeForm } from "../components/employees/EmployeeForm";
@@ -19,11 +29,22 @@ import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
 import { useBackend } from "../hooks/useBackend";
 
+type SortDirection = "asc" | "desc" | null;
+type SortColumn =
+  | "employee_code"
+  | "full_name"
+  | "department_name"
+  | "region_name"
+  | "position"
+  | "status";
+
 function EmployeeList() {
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const navigate = useNavigate();
   const backend = useBackend();
   const { user } = useAuth();
@@ -64,6 +85,59 @@ function EmployeeList() {
   });
 
   const canManageEmployees = user?.role === "admin" || user?.role === "hr";
+
+  // Handle column sorting
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      // Cycle through: asc -> desc -> null
+      if (sortDirection === "asc") {
+        setSortDirection("desc");
+      } else if (sortDirection === "desc") {
+        setSortDirection(null);
+        setSortColumn(null);
+      } else {
+        setSortDirection("asc");
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  // Sort employees data
+  const sortedEmployees = useMemo(() => {
+    if (!employees?.employees || !sortColumn || !sortDirection) {
+      return employees?.employees || [];
+    }
+
+    return [...employees.employees].sort((a, b) => {
+      let aValue = a[sortColumn] || "";
+      let bValue = b[sortColumn] || "";
+
+      // Convert to string for comparison
+      aValue = String(aValue).toLowerCase();
+      bValue = String(bValue).toLowerCase();
+
+      if (sortDirection === "asc") {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  }, [employees?.employees, sortColumn, sortDirection]);
+
+  // Get sort icon for column
+  const getSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
+    }
+    if (sortDirection === "asc") {
+      return <ArrowUp className="h-4 w-4 text-blue-600" />;
+    } else if (sortDirection === "desc") {
+      return <ArrowDown className="h-4 w-4 text-blue-600" />;
+    }
+    return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
+  };
 
   if (isLoading) {
     return (
@@ -196,17 +270,65 @@ function EmployeeList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4">Mã NV</th>
-                  <th className="text-left py-3 px-4">Họ tên</th>
-                  <th className="text-left py-3 px-4">Phòng ban</th>
-                  <th className="text-left py-3 px-4">Khu vực</th>
-                  <th className="text-left py-3 px-4">Chức vụ</th>
-                  <th className="text-left py-3 px-4">Trạng thái</th>
+                  <th className="text-left py-3 px-4">
+                    <button
+                      className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                      onClick={() => handleSort("employee_code")}
+                    >
+                      Mã NV
+                      {getSortIcon("employee_code")}
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-4">
+                    <button
+                      className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                      onClick={() => handleSort("full_name")}
+                    >
+                      Họ tên
+                      {getSortIcon("full_name")}
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-4">
+                    <button
+                      className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                      onClick={() => handleSort("department_name")}
+                    >
+                      Phòng ban
+                      {getSortIcon("department_name")}
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-4">
+                    <button
+                      className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                      onClick={() => handleSort("region_name")}
+                    >
+                      Khu vực
+                      {getSortIcon("region_name")}
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-4">
+                    <button
+                      className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                      onClick={() => handleSort("position")}
+                    >
+                      Chức vụ
+                      {getSortIcon("position")}
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-4">
+                    <button
+                      className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                      onClick={() => handleSort("status")}
+                    >
+                      Trạng thái
+                      {getSortIcon("status")}
+                    </button>
+                  </th>
                   <th className="text-left py-3 px-4">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {employees?.employees.map((employee) => (
+                {sortedEmployees.map((employee) => (
                   <tr key={employee.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4 font-medium">
                       {employee.employee_code}
@@ -269,7 +391,7 @@ function EmployeeList() {
               </tbody>
             </table>
 
-            {employees?.employees.length === 0 && (
+            {sortedEmployees.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 Không tìm thấy nhân viên nào
               </div>
