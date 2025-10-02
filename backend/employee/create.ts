@@ -1,7 +1,7 @@
+import * as bcrypt from "bcrypt";
 import { api, APIError } from "encore.dev/api";
 import db from "../db";
 import { CreateEmployeeRequest, Employee } from "./types";
-import * as bcrypt from 'bcrypt';
 
 // Creates a new employee
 export const create = api<CreateEmployeeRequest, Employee>(
@@ -31,7 +31,7 @@ export const create = api<CreateEmployeeRequest, Employee>(
       const passwordHash = await bcrypt.hash(req.password, 10);
       const userRow = await db.queryRow<{ id: number }>`
         INSERT INTO users (email, password_hash, role)
-        VALUES (${req.email}, ${passwordHash}, ${req.role || 'employee'})
+        VALUES (${req.email}, ${passwordHash}, ${req.role || "employee"})
         RETURNING id
       `;
 
@@ -42,16 +42,20 @@ export const create = api<CreateEmployeeRequest, Employee>(
     const employee = await db.queryRow<Employee>`
       INSERT INTO employees (
         user_id, employee_code, full_name, phone, address, date_of_birth,
-        hire_date, position, department_id, region_id, salary, photo_url
+        hire_date, termination_date, position, department_id, region_id, salary, status, photo_url
       )
       VALUES (
         ${userId}, ${req.employee_code}, ${req.full_name}, ${req.phone}, 
-        ${req.address}, ${req.date_of_birth}, ${req.hire_date}, ${req.position},
-        ${req.department_id}, ${req.region_id}, ${req.salary}, ${req.photo_url}
+        ${req.address}, ${req.date_of_birth}, ${req.hire_date}, ${
+      req.termination_date
+    }, ${req.position},
+        ${req.department_id}, ${req.region_id}, ${req.salary}, ${
+      req.status || "active"
+    }, ${req.photo_url}
       )
       RETURNING 
         id, user_id, employee_code, full_name, phone, address, date_of_birth,
-        hire_date, position, department_id, region_id, salary, status, photo_url,
+        hire_date, termination_date, position, department_id, region_id, salary, status, photo_url,
         created_at, updated_at
     `;
 

@@ -40,6 +40,7 @@ export function EmployeeForm() {
     address: "",
     date_of_birth: "",
     hire_date: "",
+    termination_date: "",
     position: "",
     department_id: "",
     region_id: "",
@@ -84,6 +85,9 @@ export function EmployeeForm() {
           ? new Date(employee.date_of_birth).toISOString().split("T")[0]
           : "",
         hire_date: new Date(employee.hire_date).toISOString().split("T")[0],
+        termination_date: employee.termination_date
+          ? new Date(employee.termination_date).toISOString().split("T")[0]
+          : "",
         position: employee.position || "",
         department_id: employee.department_id?.toString() || "",
         region_id: employee.region_id?.toString() || "",
@@ -181,7 +185,7 @@ export function EmployeeForm() {
       return;
     }
 
-    const submitData = {
+    const submitData: any = {
       employee_code: formData.employee_code.trim(),
       full_name: formData.full_name.trim(),
       role: formData.role,
@@ -229,12 +233,42 @@ export function EmployeeForm() {
           : undefined,
     };
 
+    // Handle termination_date separately - always include it for updates
+    console.log("formData.termination_date:", formData.termination_date);
+    if (formData.termination_date && formData.termination_date.trim() !== "") {
+      submitData.termination_date = new Date(formData.termination_date);
+      console.log("Setting termination_date to:", submitData.termination_date);
+    } else {
+      // For updates, we need to explicitly set null to clear the field
+      submitData.termination_date = null;
+      console.log("Setting termination_date to null");
+    }
+
+    console.log("Full submitData:", submitData);
+
     if (isEdit) {
       const { email, password, role, employee_code, hire_date, ...updateData } =
         submitData;
-      updateMutation.mutate(updateData);
+
+      // Explicitly ensure termination_date is included
+      const finalUpdateData = {
+        ...updateData,
+        termination_date: submitData.termination_date,
+      };
+
+      console.log("Update data being sent:", finalUpdateData);
+      console.log(
+        "termination_date specifically:",
+        finalUpdateData.termination_date
+      );
+      updateMutation.mutate(finalUpdateData);
     } else {
-      createMutation.mutate(submitData);
+      // For create, ensure status is set to 'active' if not specified
+      const createData = {
+        ...submitData,
+        status: submitData.status || "active",
+      };
+      createMutation.mutate(createData);
     }
   };
 
@@ -401,6 +435,19 @@ export function EmployeeForm() {
                   }
                   required
                   disabled={isEdit}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="termination_date">Ngày nghỉ việc</Label>
+                <Input
+                  id="termination_date"
+                  type="date"
+                  value={formData.termination_date}
+                  onChange={(e) =>
+                    handleInputChange("termination_date", e.target.value)
+                  }
+                  placeholder="Để trống nếu chưa nghỉ việc"
                 />
               </div>
 

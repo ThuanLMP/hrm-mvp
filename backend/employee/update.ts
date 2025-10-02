@@ -1,33 +1,35 @@
 import { api, APIError } from "encore.dev/api";
 import db from "../db";
-import { UpdateEmployeeRequest, Employee } from "./types";
+import { Employee, UpdateEmployeeRequest } from "./types";
 
 interface UpdateEmployeeParams {
   id: number;
 }
 
 // Updates an existing employee
-export const update = api<UpdateEmployeeParams & UpdateEmployeeRequest, Employee>(
-  { expose: true, method: "PUT", path: "/employees/:id" },
-  async (req) => {
-    const { id, ...updateData } = req;
+export const update = api<
+  UpdateEmployeeParams & UpdateEmployeeRequest,
+  Employee
+>({ expose: true, method: "PUT", path: "/employees/:id" }, async (req) => {
+  const { id, ...updateData } = req;
 
-    // Check if employee exists
-    const existingEmployee = await db.queryRow`
+  // Check if employee exists
+  const existingEmployee = await db.queryRow`
       SELECT id FROM employees WHERE id = ${id}
     `;
 
-    if (!existingEmployee) {
-      throw APIError.notFound("Không tìm thấy nhân viên");
-    }
+  if (!existingEmployee) {
+    throw APIError.notFound("Không tìm thấy nhân viên");
+  }
 
-    const employee = await db.queryRow<Employee>`
+  const employee = await db.queryRow<Employee>`
       UPDATE employees 
       SET 
         full_name = COALESCE(${updateData.full_name}, full_name),
         phone = COALESCE(${updateData.phone}, phone),
         address = COALESCE(${updateData.address}, address),
         date_of_birth = COALESCE(${updateData.date_of_birth}, date_of_birth),
+        termination_date = ${updateData.termination_date},
         position = COALESCE(${updateData.position}, position),
         department_id = COALESCE(${updateData.department_id}, department_id),
         region_id = COALESCE(${updateData.region_id}, region_id),
@@ -38,30 +40,29 @@ export const update = api<UpdateEmployeeParams & UpdateEmployeeRequest, Employee
       WHERE id = ${id}
       RETURNING 
         id, user_id, employee_code, full_name, phone, address, date_of_birth,
-        hire_date, position, department_id, region_id, salary, status, photo_url,
+        hire_date, termination_date, position, department_id, region_id, salary, status, photo_url,
         created_at, updated_at
     `;
 
-    if (!employee) {
-      throw APIError.internal("Không thể cập nhật nhân viên");
-    }
+  if (!employee) {
+    throw APIError.internal("Không thể cập nhật nhân viên");
+  }
 
-    // Get department name if exists
-    if (employee.department_id) {
-      const dept = await db.queryRow<{ name: string }>`
+  // Get department name if exists
+  if (employee.department_id) {
+    const dept = await db.queryRow<{ name: string }>`
         SELECT name FROM departments WHERE id = ${employee.department_id}
       `;
-      employee.department_name = dept?.name;
-    }
+    employee.department_name = dept?.name;
+  }
 
-    // Get region name if exists
-    if (employee.region_id) {
-      const region = await db.queryRow<{ name: string }>`
+  // Get region name if exists
+  if (employee.region_id) {
+    const region = await db.queryRow<{ name: string }>`
         SELECT name FROM regions WHERE id = ${employee.region_id}
       `;
-      employee.region_name = region?.name;
-    }
-
-    return employee;
+    employee.region_name = region?.name;
   }
-);
+
+  return employee;
+});

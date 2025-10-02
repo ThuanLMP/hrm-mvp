@@ -27,7 +27,7 @@ export const list = api<ListEmployeesRequest, ListEmployeesResponse>(
       let baseQuery = `
         SELECT 
           e.id, e.user_id, e.employee_code, e.full_name, e.phone, e.address,
-          e.date_of_birth, e.hire_date, e.position, e.department_id, e.region_id, e.salary,
+          e.date_of_birth, e.hire_date, e.termination_date, e.position, e.department_id, e.region_id, e.salary,
           e.status, e.photo_url, e.created_at, e.updated_at,
           d.name as department_name,
           r.name as region_name
@@ -76,11 +76,16 @@ export const list = api<ListEmployeesRequest, ListEmployeesResponse>(
         paramIndex++;
       }
 
-      baseQuery += ` ORDER BY e.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+      baseQuery += ` ORDER BY e.created_at DESC LIMIT $${paramIndex} OFFSET $${
+        paramIndex + 1
+      }`;
       params.push(limit, offset);
 
       employees = await db.rawQueryAll<Employee>(baseQuery, ...params);
-      countResult = await db.rawQueryRow<{ total: number }>(countQuery, ...params.slice(0, -2));
+      countResult = await db.rawQueryRow<{ total: number }>(
+        countQuery,
+        ...params.slice(0, -2)
+      );
     } else {
       // No filters - use simple queries
       employees = await db.queryAll<Employee>`
