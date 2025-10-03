@@ -58,6 +58,8 @@ export function EmployeeForm() {
     graduation_year: "",
     training_system: "",
     degree_classification: "",
+    annual_leave_days: "",
+    sick_leave_days: "",
   });
   const [passwordReset, setPasswordReset] = useState({
     newPassword: "",
@@ -125,6 +127,8 @@ export function EmployeeForm() {
         graduation_year: employee.graduation_year?.toString() || "",
         training_system: employee.training_system || "",
         degree_classification: employee.degree_classification || "",
+        annual_leave_days: employee.annual_leave_days?.toString() || "",
+        sick_leave_days: employee.sick_leave_days?.toString() || "",
       });
       console.log(formData);
     }
@@ -280,6 +284,14 @@ export function EmployeeForm() {
         formData.degree_classification.trim() !== ""
           ? formData.degree_classification.trim()
           : undefined,
+      annual_leave_days:
+        formData.annual_leave_days && formData.annual_leave_days.trim() !== ""
+          ? parseInt(formData.annual_leave_days)
+          : undefined,
+      sick_leave_days:
+        formData.sick_leave_days && formData.sick_leave_days.trim() !== ""
+          ? parseInt(formData.sick_leave_days)
+          : undefined,
       email:
         formData.email && formData.email.trim() !== ""
           ? formData.email.trim()
@@ -307,6 +319,8 @@ export function EmployeeForm() {
         graduation_year: submitData.graduation_year,
         training_system: submitData.training_system,
         degree_classification: submitData.degree_classification,
+        annual_leave_days: submitData.annual_leave_days,
+        sick_leave_days: submitData.sick_leave_days,
       };
 
       updateMutation.mutate(finalUpdateData);
@@ -469,57 +483,133 @@ export function EmployeeForm() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="education_level">Trình độ học vấn</Label>
-                <Select
-                  value={formData.education_level}
-                  onValueChange={(value) =>
-                    handleInputChange("education_level", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn trình độ học vấn">
-                      {formData.education_level &&
-                      formData.education_level !== "none"
-                        ? EDUCATION_LEVELS[
-                            formData.education_level as keyof typeof EDUCATION_LEVELS
-                          ]
-                        : formData.education_level === "none"
-                        ? "Không có"
-                        : "Chọn trình độ học vấn"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Không có</SelectItem>
-                    {Object.entries(EDUCATION_LEVELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Education Level, Training System, Degree Classification - Same Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="education_level">Trình độ học vấn</Label>
+                  <Select
+                    value={formData.education_level}
+                    onValueChange={(value) =>
+                      handleInputChange("education_level", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn trình độ học vấn">
+                        {formData.education_level &&
+                        formData.education_level !== "none"
+                          ? EDUCATION_LEVELS[
+                              formData.education_level as keyof typeof EDUCATION_LEVELS
+                            ]
+                          : formData.education_level === "none"
+                          ? "Không có"
+                          : "Chọn trình độ học vấn"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Không có</SelectItem>
+                      {Object.entries(EDUCATION_LEVELS).map(
+                        ([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="training_system">Hệ đào tạo</Label>
+                  <Select
+                    value={formData.training_system}
+                    onValueChange={(value) =>
+                      handleInputChange("training_system", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn hệ đào tạo">
+                        {formData.training_system &&
+                        formData.training_system !== "none"
+                          ? TRAINING_SYSTEMS[
+                              formData.training_system as keyof typeof TRAINING_SYSTEMS
+                            ]
+                          : formData.training_system === "none"
+                          ? "Không có"
+                          : "Chọn hệ đào tạo"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Không có</SelectItem>
+                      {Object.entries(TRAINING_SYSTEMS).map(
+                        ([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="degree_classification">
+                    Xếp loại bằng cấp
+                  </Label>
+                  <Select
+                    value={formData.degree_classification}
+                    onValueChange={(value) =>
+                      handleInputChange("degree_classification", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn xếp loại">
+                        {formData.degree_classification &&
+                        formData.degree_classification !== "none"
+                          ? DEGREE_CLASSIFICATIONS[
+                              formData.degree_classification as keyof typeof DEGREE_CLASSIFICATIONS
+                            ]
+                          : formData.degree_classification === "none"
+                          ? "Không có"
+                          : "Chọn xếp loại"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Không có</SelectItem>
+                      {Object.entries(DEGREE_CLASSIFICATIONS).map(
+                        ([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="school_name">Tên trường</Label>
-                <Input
-                  id="school_name"
-                  value={formData.school_name}
-                  onChange={(e) =>
-                    handleInputChange("school_name", e.target.value)
-                  }
-                  placeholder="Tên trường đại học/cao đẳng"
-                />
-              </div>
+              {/* School Details - Separate Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="school_name">Tên trường</Label>
+                  <Input
+                    id="school_name"
+                    value={formData.school_name}
+                    onChange={(e) =>
+                      handleInputChange("school_name", e.target.value)
+                    }
+                    placeholder="Tên trường đại học/cao đẳng"
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="major">Chuyên ngành</Label>
-                <Input
-                  id="major"
-                  value={formData.major}
-                  onChange={(e) => handleInputChange("major", e.target.value)}
-                  placeholder="Tên chuyên ngành"
-                />
+                <div>
+                  <Label htmlFor="major">Chuyên ngành</Label>
+                  <Input
+                    id="major"
+                    value={formData.major}
+                    onChange={(e) => handleInputChange("major", e.target.value)}
+                    placeholder="Tên chuyên ngành"
+                  />
+                </div>
               </div>
 
               <div>
@@ -534,71 +624,8 @@ export function EmployeeForm() {
                   placeholder="Năm tốt nghiệp"
                   min="1950"
                   max={new Date().getFullYear() + 5}
+                  className="max-w-xs"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="training_system">Hệ đào tạo</Label>
-                <Select
-                  value={formData.training_system}
-                  onValueChange={(value) =>
-                    handleInputChange("training_system", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn hệ đào tạo">
-                      {formData.training_system &&
-                      formData.training_system !== "none"
-                        ? TRAINING_SYSTEMS[
-                            formData.training_system as keyof typeof TRAINING_SYSTEMS
-                          ]
-                        : formData.training_system === "none"
-                        ? "Không có"
-                        : "Chọn hệ đào tạo"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Không có</SelectItem>
-                    {Object.entries(TRAINING_SYSTEMS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="degree_classification">Xếp loại bằng cấp</Label>
-                <Select
-                  value={formData.degree_classification}
-                  onValueChange={(value) =>
-                    handleInputChange("degree_classification", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn xếp loại">
-                      {formData.degree_classification &&
-                      formData.degree_classification !== "none"
-                        ? DEGREE_CLASSIFICATIONS[
-                            formData.degree_classification as keyof typeof DEGREE_CLASSIFICATIONS
-                          ]
-                        : formData.degree_classification === "none"
-                        ? "Không có"
-                        : "Chọn xếp loại"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Không có</SelectItem>
-                    {Object.entries(DEGREE_CLASSIFICATIONS).map(
-                      ([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
               </div>
             </CardContent>
           </Card>
@@ -717,6 +744,46 @@ export function EmployeeForm() {
                   value={formData.salary}
                   onChange={(e) => handleInputChange("salary", e.target.value)}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="annual_leave_days">
+                    Ngày nghỉ phép năm (ngày)
+                  </Label>
+                  <Input
+                    id="annual_leave_days"
+                    type="number"
+                    value={formData.annual_leave_days}
+                    onChange={(e) =>
+                      handleInputChange("annual_leave_days", e.target.value)
+                    }
+                    placeholder="Để trống để dùng mặc định hệ thống"
+                    min="0"
+                    max="365"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Để trống để sử dụng cài đặt mặc định của hệ thống
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="sick_leave_days">Ngày nghỉ ốm (ngày)</Label>
+                  <Input
+                    id="sick_leave_days"
+                    type="number"
+                    value={formData.sick_leave_days}
+                    onChange={(e) =>
+                      handleInputChange("sick_leave_days", e.target.value)
+                    }
+                    placeholder="Để trống để dùng mặc định hệ thống"
+                    min="0"
+                    max="365"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Để trống để sử dụng cài đặt mặc định của hệ thống
+                  </p>
+                </div>
               </div>
 
               {isEdit && (

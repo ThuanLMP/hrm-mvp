@@ -15,6 +15,7 @@ export const get = api<GetEmployeeRequest, Employee>(
         e.id, e.user_id, e.employee_code, e.full_name, e.phone, e.address,
         e.date_of_birth, e.hire_date, e.termination_date, e.position, e.department_id, e.region_id, e.salary,
         e.status, e.photo_url, e.education_level, e.school_name, e.major, e.graduation_year, e.training_system, e.degree_classification,
+        e.annual_leave_days, e.sick_leave_days,
         e.created_at, e.updated_at,
         d.name as department_name,
         r.name as region_name

@@ -433,6 +433,41 @@ export function EmployeeDetail() {
                     </div>
                   )}
 
+                  {((employee as any).annual_leave_days ||
+                    (employee as any).sick_leave_days) && (
+                    <div>
+                      <Label>Nghỉ phép</Label>
+                      <div className="space-y-1">
+                        {(employee as any).annual_leave_days && (
+                          <p className="text-sm">
+                            <span className="text-muted-foreground">
+                              Nghỉ phép năm:
+                            </span>{" "}
+                            <span className="font-medium">
+                              {(employee as any).annual_leave_days} ngày
+                            </span>
+                          </p>
+                        )}
+                        {(employee as any).sick_leave_days && (
+                          <p className="text-sm">
+                            <span className="text-muted-foreground">
+                              Nghỉ ốm:
+                            </span>{" "}
+                            <span className="font-medium">
+                              {(employee as any).sick_leave_days} ngày
+                            </span>
+                          </p>
+                        )}
+                        {!(employee as any).annual_leave_days &&
+                          !(employee as any).sick_leave_days && (
+                            <p className="text-sm text-muted-foreground">
+                              Sử dụng cài đặt mặc định của hệ thống
+                            </p>
+                          )}
+                      </div>
+                    </div>
+                  )}
+
                   {employee.training_system && (
                     <div>
                       <Label>Hệ đào tạo</Label>

@@ -43,7 +43,8 @@ export const create = api<CreateEmployeeRequest, Employee>(
       INSERT INTO employees (
         user_id, employee_code, full_name, phone, address, date_of_birth,
         hire_date, termination_date, position, department_id, region_id, salary, status, photo_url, education_level,
-        school_name, major, graduation_year, training_system, degree_classification
+        school_name, major, graduation_year, training_system, degree_classification,
+        annual_leave_days, sick_leave_days
       )
       VALUES (
         ${userId}, ${req.employee_code}, ${req.full_name}, ${req.phone}, 
@@ -55,12 +56,14 @@ export const create = api<CreateEmployeeRequest, Employee>(
     }, ${req.photo_url}, ${req.education_level},
         ${req.school_name}, ${req.major}, ${req.graduation_year}, ${
       req.training_system
-    }, ${req.degree_classification}
+    }, ${req.degree_classification},
+        ${req.annual_leave_days}, ${req.sick_leave_days}
       )
       RETURNING 
         id, user_id, employee_code, full_name, phone, address, date_of_birth,
         hire_date, termination_date, position, department_id, region_id, salary, status, photo_url, education_level,
         school_name, major, graduation_year, training_system, degree_classification,
+        annual_leave_days, sick_leave_days,
         created_at, updated_at
     `;
 

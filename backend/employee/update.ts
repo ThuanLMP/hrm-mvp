@@ -42,12 +42,15 @@ export const update = api<
         graduation_year = COALESCE(${updateData.graduation_year}, graduation_year),
         training_system = COALESCE(${updateData.training_system}, training_system),
         degree_classification = COALESCE(${updateData.degree_classification}, degree_classification),
+        annual_leave_days = COALESCE(${updateData.annual_leave_days}, annual_leave_days),
+        sick_leave_days = COALESCE(${updateData.sick_leave_days}, sick_leave_days),
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING 
         id, user_id, employee_code, full_name, phone, address, date_of_birth,
         hire_date, termination_date, position, department_id, region_id, salary, status, photo_url, education_level,
         school_name, major, graduation_year, training_system, degree_classification,
+        annual_leave_days, sick_leave_days,
         created_at, updated_at
     `;
 

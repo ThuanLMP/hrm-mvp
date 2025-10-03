@@ -22,6 +22,8 @@ export interface Employee {
   graduation_year?: number;
   training_system?: "formal" | "non_formal";
   degree_classification?: "average" | "good" | "excellent" | "outstanding";
+  annual_leave_days?: number;
+  sick_leave_days?: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -49,6 +51,8 @@ export interface CreateEmployeeRequest {
   graduation_year?: number;
   training_system?: "formal" | "non_formal";
   degree_classification?: "average" | "good" | "excellent" | "outstanding";
+  annual_leave_days?: number;
+  sick_leave_days?: number;
 }
 
 export interface UpdateEmployeeRequest {
@@ -69,6 +73,8 @@ export interface UpdateEmployeeRequest {
   graduation_year?: number;
   training_system?: "formal" | "non_formal";
   degree_classification?: "average" | "good" | "excellent" | "outstanding";
+  annual_leave_days?: number;
+  sick_leave_days?: number;
 }
 
 export interface ListEmployeesResponse {
