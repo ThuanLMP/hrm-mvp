@@ -99,14 +99,6 @@ export function ConfigPage() {
           ["annual_leave_days", "sick_leave_days"].includes(c.config_key)
         ) || [],
     },
-    {
-      title: "Cấu hình nhân viên",
-      icon: Settings,
-      configs:
-        configs?.configs.filter((c) =>
-          ["education_levels"].includes(c.config_key)
-        ) || [],
-    },
   ];
 
   const getConfigLabel = (key: string) => {
@@ -117,7 +109,6 @@ export function ConfigPage() {
       work_end_time: "Giờ kết thúc làm việc",
       annual_leave_days: "Số ngày phép năm",
       sick_leave_days: "Số ngày nghỉ ốm / năm",
-      education_levels: "Trình độ học vấn (phân cách bằng dấu phẩy)",
     };
     return labels[key] || key;
   };

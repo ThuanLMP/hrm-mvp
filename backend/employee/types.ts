@@ -16,12 +16,12 @@ export interface Employee {
   salary?: number;
   status: "active" | "inactive" | "terminated";
   photo_url?: string;
-  education_level?: string;
+  education_level?: "high_school" | "college" | "university" | "master" | "phd";
   school_name?: string;
   major?: string;
   graduation_year?: number;
-  training_system?: string;
-  degree_classification?: string;
+  training_system?: "formal" | "non_formal";
+  degree_classification?: "average" | "good" | "excellent" | "outstanding";
   created_at: Date;
   updated_at: Date;
 }
@@ -43,12 +43,12 @@ export interface CreateEmployeeRequest {
   salary?: number;
   status?: "active" | "inactive" | "terminated";
   photo_url?: string;
-  education_level?: string;
+  education_level?: "high_school" | "college" | "university" | "master" | "phd";
   school_name?: string;
   major?: string;
   graduation_year?: number;
-  training_system?: string;
-  degree_classification?: string;
+  training_system?: "formal" | "non_formal";
+  degree_classification?: "average" | "good" | "excellent" | "outstanding";
 }
 
 export interface UpdateEmployeeRequest {
@@ -63,12 +63,12 @@ export interface UpdateEmployeeRequest {
   salary?: number;
   status?: "active" | "inactive" | "terminated";
   photo_url?: string;
-  education_level?: string;
+  education_level?: "high_school" | "college" | "university" | "master" | "phd";
   school_name?: string;
   major?: string;
   graduation_year?: number;
-  training_system?: string;
-  degree_classification?: string;
+  training_system?: "formal" | "non_formal";
+  degree_classification?: "average" | "good" | "excellent" | "outstanding";
 }
 
 export interface ListEmployeesResponse {

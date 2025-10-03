@@ -15,6 +15,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Key, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  DEGREE_CLASSIFICATIONS,
+  EDUCATION_LEVELS,
+  TRAINING_SYSTEMS,
+} from "../../constants/education";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAuthenticatedBackend } from "../../hooks/useAuthenticatedBackend";
 import { useBackend } from "../../hooks/useBackend";
@@ -54,14 +59,13 @@ export function EmployeeForm() {
     training_system: "",
     degree_classification: "",
   });
-
   const [passwordReset, setPasswordReset] = useState({
     newPassword: "",
     confirmPassword: "",
     showPasswordSection: false,
   });
 
-  const { data: employee, isLoading: employeeLoading } = useQuery({
+  const { data: employee, isLoading: employeeLoading } = useQuery<any>({
     queryKey: ["employee", id],
     queryFn: () => backend.employee.get({ id: parseInt(id!) }),
     enabled: isEdit,
@@ -81,6 +85,14 @@ export function EmployeeForm() {
     queryKey: ["system-config"],
     queryFn: () => backend.config.get(),
   });
+
+  // Disable body scroll when form is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
   useEffect(() => {
     if (employee) {
@@ -114,6 +126,7 @@ export function EmployeeForm() {
         training_system: employee.training_system || "",
         degree_classification: employee.degree_classification || "",
       });
+      console.log(formData);
     }
   }, [employee]);
 
@@ -277,25 +290,17 @@ export function EmployeeForm() {
           : undefined,
     };
 
-    // Handle termination_date separately
-    console.log("formData.termination_date:", formData.termination_date);
     if (formData.termination_date && formData.termination_date.trim() !== "") {
       submitData.termination_date = new Date(formData.termination_date);
-      console.log("Setting termination_date to:", submitData.termination_date);
     }
-    // Don't set termination_date to null for create operations
-
-    console.log("Full submitData:", submitData);
 
     if (isEdit) {
       const { email, password, role, employee_code, hire_date, ...updateData } =
         submitData;
 
-      // For updates, explicitly set termination_date to null if not provided
       const finalUpdateData = {
         ...updateData,
         termination_date: submitData.termination_date || null,
-        // Ensure education fields are explicitly included
         education_level: submitData.education_level,
         school_name: submitData.school_name,
         major: submitData.major,
@@ -304,35 +309,22 @@ export function EmployeeForm() {
         degree_classification: submitData.degree_classification,
       };
 
-      console.log("Update data being sent:", finalUpdateData);
-      console.log("Education fields:", {
-        education_level: finalUpdateData.education_level,
-        school_name: finalUpdateData.school_name,
-        major: finalUpdateData.major,
-        graduation_year: finalUpdateData.graduation_year,
-        training_system: finalUpdateData.training_system,
-        degree_classification: finalUpdateData.degree_classification,
-      });
       updateMutation.mutate(finalUpdateData);
     } else {
-      // For create, don't include termination_date if not provided
       const createData = {
         ...submitData,
         status: submitData.status || "active",
       };
 
-      // Only include termination_date if it has a value
       if (submitData.termination_date) {
         createData.termination_date = submitData.termination_date;
       }
 
-      console.log("Create data being sent:", createData);
       createMutation.mutate(createData);
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    console.log(`Updating field ${field} with value:`, value);
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -489,7 +481,9 @@ export function EmployeeForm() {
                     <SelectValue placeholder="Chọn trình độ học vấn">
                       {formData.education_level &&
                       formData.education_level !== "none"
-                        ? formData.education_level
+                        ? EDUCATION_LEVELS[
+                            formData.education_level as keyof typeof EDUCATION_LEVELS
+                          ]
                         : formData.education_level === "none"
                         ? "Không có"
                         : "Chọn trình độ học vấn"}
@@ -497,16 +491,11 @@ export function EmployeeForm() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Không có</SelectItem>
-                    {configs?.configs
-                      ?.find((c) => c.config_key === "education_levels")
-                      ?.config_value?.split(",")
-                      .map((level: string) => level.trim())
-                      .filter((level: string) => level.length > 0)
-                      .map((level: string) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
+                    {Object.entries(EDUCATION_LEVELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -560,7 +549,9 @@ export function EmployeeForm() {
                     <SelectValue placeholder="Chọn hệ đào tạo">
                       {formData.training_system &&
                       formData.training_system !== "none"
-                        ? formData.training_system
+                        ? TRAINING_SYSTEMS[
+                            formData.training_system as keyof typeof TRAINING_SYSTEMS
+                          ]
                         : formData.training_system === "none"
                         ? "Không có"
                         : "Chọn hệ đào tạo"}
@@ -568,10 +559,11 @@ export function EmployeeForm() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Không có</SelectItem>
-                    <SelectItem value="Hệ chính quy">Hệ chính quy</SelectItem>
-                    <SelectItem value="Hệ không chính quy">
-                      Hệ không chính quy
-                    </SelectItem>
+                    {Object.entries(TRAINING_SYSTEMS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -588,7 +580,9 @@ export function EmployeeForm() {
                     <SelectValue placeholder="Chọn xếp loại">
                       {formData.degree_classification &&
                       formData.degree_classification !== "none"
-                        ? formData.degree_classification
+                        ? DEGREE_CLASSIFICATIONS[
+                            formData.degree_classification as keyof typeof DEGREE_CLASSIFICATIONS
+                          ]
                         : formData.degree_classification === "none"
                         ? "Không có"
                         : "Chọn xếp loại"}
@@ -596,10 +590,13 @@ export function EmployeeForm() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Không có</SelectItem>
-                    <SelectItem value="Trung bình">Trung bình</SelectItem>
-                    <SelectItem value="Khá">Khá</SelectItem>
-                    <SelectItem value="Giỏi">Giỏi</SelectItem>
-                    <SelectItem value="Xuất sắc">Xuất sắc</SelectItem>
+                    {Object.entries(DEGREE_CLASSIFICATIONS).map(
+                      ([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
               </div>

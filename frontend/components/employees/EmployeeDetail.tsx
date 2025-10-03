@@ -14,8 +14,13 @@ import {
   Phone,
   User,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  DEGREE_CLASSIFICATIONS,
+  EDUCATION_LEVELS,
+  TRAINING_SYSTEMS,
+} from "../../constants/education";
 import { useAuth } from "../../contexts/AuthContext";
 import { useBackend } from "../../hooks/useBackend";
 import {
@@ -35,6 +40,14 @@ export function EmployeeDetail() {
     null
   );
   const [isInsuranceModalOpen, setIsInsuranceModalOpen] = useState(false);
+
+  // Disable body scroll when detail page is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ["employee", id],
@@ -211,7 +224,12 @@ export function EmployeeDetail() {
                   <div className="flex items-center space-x-3">
                     <User className="h-4 w-4 text-gray-400" />
                     <span className="text-sm">
-                      Trình độ: {employee.education_level}
+                      Trình độ:{" "}
+                      {
+                        EDUCATION_LEVELS[
+                          employee.education_level as keyof typeof EDUCATION_LEVELS
+                        ]
+                      }
                     </span>
                   </div>
                 )}
@@ -368,6 +386,32 @@ export function EmployeeDetail() {
                       </p>
                     </div>
                   )}
+
+                  {employee.training_system && (
+                    <div>
+                      <Label>Hệ đào tạo</Label>
+                      <p className="font-medium">
+                        {
+                          TRAINING_SYSTEMS[
+                            employee.training_system as keyof typeof TRAINING_SYSTEMS
+                          ]
+                        }
+                      </p>
+                    </div>
+                  )}
+
+                  {employee.degree_classification && (
+                    <div>
+                      <Label>Xếp loại bằng cấp</Label>
+                      <p className="font-medium">
+                        {
+                          DEGREE_CLASSIFICATIONS[
+                            employee.degree_classification as keyof typeof DEGREE_CLASSIFICATIONS
+                          ]
+                        }
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -383,12 +427,7 @@ export function EmployeeDetail() {
                   {(!insuranceData?.records ||
                     insuranceData.records.length === 0) &&
                     canEdit && (
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/insurance/create?employee_id=${id}`)
-                        }
-                      >
+                      <Button size="sm" onClick={() => navigate(`/insurance`)}>
                         Tạo ngay
                       </Button>
                     )}
@@ -624,11 +663,7 @@ export function EmployeeDetail() {
                       Nhân viên này chưa có hồ sơ bảo hiểm nào
                     </p>
                     {canEdit && (
-                      <Button
-                        onClick={() =>
-                          navigate(`/insurance/create?employee_id=${id}`)
-                        }
-                      >
+                      <Button onClick={() => navigate(`/insurance`)}>
                         Tạo hồ sơ bảo hiểm
                       </Button>
                     )}
