@@ -64,7 +64,7 @@ export function InsuranceDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="min-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
@@ -259,11 +259,7 @@ export function InsuranceDetailModal({
               <Button variant="outline" onClick={onClose}>
                 Đóng
               </Button>
-              <Button
-                onClick={() =>
-                  window.open(`/insurance/${insurance.id}`, "_blank")
-                }
-              >
+              <Button onClick={() => window.open(`/insurance`, "_blank")}>
                 Mở trang chi tiết
               </Button>
             </div>

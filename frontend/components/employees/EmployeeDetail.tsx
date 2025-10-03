@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  Award,
   Briefcase,
   Building2,
   Calendar,
@@ -81,6 +82,13 @@ export function EmployeeDetail() {
     enabled: Boolean(id),
   });
 
+  // Get bonuses for this employee
+  const { data: bonusData, isLoading: bonusLoading } = useQuery({
+    queryKey: ["employee-bonuses", id],
+    queryFn: () => backend.bonus.list({ employeeId: parseInt(id!) }),
+    enabled: Boolean(id),
+  });
+
   const canEdit = user?.role === "admin" || user?.role === "hr";
 
   const handleViewInsuranceDetail = (insuranceId: string) => {
@@ -120,6 +128,28 @@ export function EmployeeDetail() {
       active: "Đang làm việc",
       inactive: "Tạm nghỉ",
       terminated: "Đã nghỉ việc",
+    };
+
+    return (
+      <Badge variant={variants[status as keyof typeof variants] || "default"}>
+        {labels[status as keyof typeof labels] || status}
+      </Badge>
+    );
+  };
+
+  const getBonusStatusBadge = (status: string) => {
+    const variants = {
+      pending: "secondary",
+      approved: "default",
+      rejected: "destructive",
+      paid: "outline",
+    } as const;
+
+    const labels = {
+      pending: "Chờ duyệt",
+      approved: "Đã duyệt",
+      rejected: "Từ chối",
+      paid: "Đã thanh toán",
     };
 
     return (
@@ -294,6 +324,22 @@ export function EmployeeDetail() {
                   </div>
                   <p className="text-sm text-gray-600">Lần đi muộn tháng này</p>
                 </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {bonusData?.bonuses?.length || 0}
+                  </div>
+                  <p className="text-sm text-gray-600">Tổng số thưởng</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {formatCurrency(
+                      bonusData?.bonuses
+                        ?.filter((b) => b.status === "approved")
+                        .reduce((sum, b) => sum + b.amount, 0) || 0
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600">Tổng thưởng đã duyệt</p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -413,6 +459,125 @@ export function EmployeeDetail() {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Bonus Information Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Award className="h-5 w-5 mr-2" />
+                    Thông tin thưởng
+                  </div>
+                  {(!bonusData?.bonuses || bonusData.bonuses.length === 0) &&
+                    canEdit && (
+                      <Button size="sm" onClick={() => navigate(`/bonus`)}>
+                        Tạo thưởng
+                      </Button>
+                    )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {bonusLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <LoadingSpinner />
+                  </div>
+                ) : bonusData?.bonuses && bonusData.bonuses.length > 0 ? (
+                  <div className="space-y-4">
+                    {bonusData.bonuses.map((bonus) => (
+                      <div key={bonus.id} className="border rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
+                              style={{
+                                backgroundColor:
+                                  bonus.bonusTypeColor || "#3b82f6",
+                              }}
+                            >
+                              {bonus.bonusTypeIcon || "🎯"}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">
+                                {bonus.title}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {bonus.bonusTypeName}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-green-600">
+                              {formatCurrency(bonus.amount)}
+                            </p>
+                            {getBonusStatusBadge(bonus.status)}
+                          </div>
+                        </div>
+
+                        {bonus.description && (
+                          <p className="text-gray-700 mb-3">
+                            {bonus.description}
+                          </p>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <Label>Ngày trao thưởng</Label>
+                            <p className="font-medium">
+                              {formatDate(bonus.awardDate as any)}
+                            </p>
+                          </div>
+                          <div>
+                            <Label>Ngày tạo</Label>
+                            <p className="font-medium">
+                              {formatDate(bonus.createdAt as any)}
+                            </p>
+                          </div>
+                          {bonus.approvedByName && (
+                            <div>
+                              <Label>Người duyệt</Label>
+                              <p className="font-medium">
+                                {bonus.approvedByName}
+                              </p>
+                            </div>
+                          )}
+                          {bonus.approvedAt && (
+                            <div>
+                              <Label>Ngày duyệt</Label>
+                              <p className="font-medium">
+                                {formatDate(bonus.approvedAt as any)}
+                              </p>
+                            </div>
+                          )}
+                          {bonus.rejectionReason && (
+                            <div className="md:col-span-2">
+                              <Label>Lý do từ chối</Label>
+                              <p className="font-medium text-red-600">
+                                {bonus.rejectionReason}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Award className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg font-medium mb-2">
+                      Chưa có thông tin thưởng
+                    </p>
+                    <p className="text-sm mb-4">
+                      Nhân viên này chưa có thưởng nào
+                    </p>
+                    {canEdit && (
+                      <Button onClick={() => navigate(`/bonus`)}>
+                        Tạo thưởng mới
+                      </Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

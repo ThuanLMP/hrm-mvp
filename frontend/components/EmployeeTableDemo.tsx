@@ -1,34 +1,92 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { EDUCATION_LEVELS } from "@/constants/education";
 import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
   Edit,
   Eye,
-  Plus,
   Search,
   User,
   Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import { EmployeeDetail } from "../components/employees/EmployeeDetail";
-import { EmployeeForm } from "../components/employees/EmployeeForm";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";
-import { EDUCATION_LEVELS } from "../constants/education";
-import { useAuth } from "../contexts/AuthContext";
-import { useBackend } from "../hooks/useBackend";
+import { useState } from "react";
+
+// Mock data for demo
+const mockEmployees = [
+  {
+    id: 1,
+    employee_code: "NV001",
+    full_name: "Nguyễn Văn An",
+    department_name: "IT",
+    region_name: "Hà Nội",
+    position: "Developer",
+    status: "active",
+    salary: 15000000,
+    hire_date: "2023-01-15",
+    education_level: "university",
+    phone: "0123456789",
+    photo_url: null,
+  },
+  {
+    id: 2,
+    employee_code: "NV002",
+    full_name: "Trần Thị Bình",
+    department_name: "HR",
+    region_name: "TP.HCM",
+    position: "HR Manager",
+    status: "active",
+    salary: 20000000,
+    hire_date: "2022-06-01",
+    education_level: "master",
+    phone: "0987654321",
+    photo_url: null,
+  },
+  {
+    id: 3,
+    employee_code: "NV003",
+    full_name: "Lê Văn Cường",
+    department_name: "Finance",
+    region_name: "Đà Nẵng",
+    position: "Accountant",
+    status: "inactive",
+    salary: 12000000,
+    hire_date: "2023-03-10",
+    education_level: "college",
+    phone: "0369852147",
+    photo_url: null,
+  },
+  {
+    id: 4,
+    employee_code: "NV004",
+    full_name: "Phạm Thị Dung",
+    department_name: "Marketing",
+    region_name: "Hà Nội",
+    position: "Marketing Specialist",
+    status: "active",
+    salary: 18000000,
+    hire_date: "2022-12-05",
+    education_level: "university",
+    phone: "0741258963",
+    photo_url: null,
+  },
+  {
+    id: 5,
+    employee_code: "NV005",
+    full_name: "Hoàng Văn Em",
+    department_name: "IT",
+    region_name: "TP.HCM",
+    position: "Senior Developer",
+    status: "terminated",
+    salary: 25000000,
+    hire_date: "2021-08-20",
+    education_level: "phd",
+    phone: "0852369741",
+    photo_url: null,
+  },
+];
 
 type SortDirection = "asc" | "desc" | null;
 type SortColumn =
@@ -43,7 +101,7 @@ type SortColumn =
   | "education_level"
   | "phone";
 
-function EmployeeList() {
+export function EmployeeTableDemo() {
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [regionFilter, setRegionFilter] = useState("all");
@@ -51,56 +109,10 @@ function EmployeeList() {
   const [educationFilter, setEducationFilter] = useState("all");
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const navigate = useNavigate();
-  const backend = useBackend();
-  const { user } = useAuth();
-
-  const { data: employees, isLoading } = useQuery({
-    queryKey: [
-      "employees",
-      search,
-      departmentFilter,
-      regionFilter,
-      statusFilter,
-      educationFilter,
-    ],
-    queryFn: () =>
-      backend.employee.list({
-        search: search || undefined,
-        department_id:
-          departmentFilter && departmentFilter !== "all"
-            ? parseInt(departmentFilter)
-            : undefined,
-        region_id:
-          regionFilter && regionFilter !== "all"
-            ? parseInt(regionFilter)
-            : undefined,
-        status:
-          statusFilter && statusFilter !== "all" ? statusFilter : undefined,
-        education_level:
-          educationFilter && educationFilter !== "all"
-            ? educationFilter
-            : undefined,
-        limit: 100,
-      }),
-  });
-
-  const { data: departments } = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => backend.department.list(),
-  });
-
-  const { data: regions } = useQuery({
-    queryKey: ["regions"],
-    queryFn: () => backend.region.list(),
-  });
-
-  const canManageEmployees = user?.role === "admin" || user?.role === "hr";
 
   // Handle column sorting
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
-      // Cycle through: asc -> desc -> null
       if (sortDirection === "asc") {
         setSortDirection("desc");
       } else if (sortDirection === "desc") {
@@ -115,27 +127,53 @@ function EmployeeList() {
     }
   };
 
-  // Sort employees data
-  const sortedEmployees = useMemo(() => {
-    if (!employees?.employees || !sortColumn || !sortDirection) {
-      return employees?.employees || [];
+  // Filter and sort employees
+  const filteredEmployees = mockEmployees.filter((employee) => {
+    const matchesSearch =
+      employee.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      employee.employee_code.toLowerCase().includes(search.toLowerCase());
+
+    const matchesDepartment =
+      departmentFilter === "all" ||
+      employee.department_name === departmentFilter;
+
+    const matchesRegion =
+      regionFilter === "all" || employee.region_name === regionFilter;
+
+    const matchesStatus =
+      statusFilter === "all" || employee.status === statusFilter;
+
+    const matchesEducation =
+      educationFilter === "all" || employee.education_level === educationFilter;
+
+    return (
+      matchesSearch &&
+      matchesDepartment &&
+      matchesRegion &&
+      matchesStatus &&
+      matchesEducation
+    );
+  });
+
+  const sortedEmployees = [...filteredEmployees].sort((a, b) => {
+    if (!sortColumn || !sortDirection) return 0;
+
+    let aValue = a[sortColumn] || "";
+    let bValue = b[sortColumn] || "";
+
+    if (typeof aValue === "number" && typeof bValue === "number") {
+      return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
     }
 
-    return [...employees.employees].sort((a, b) => {
-      let aValue = a[sortColumn] || "";
-      let bValue = b[sortColumn] || "";
+    aValue = String(aValue).toLowerCase();
+    bValue = String(bValue).toLowerCase();
 
-      // Convert to string for comparison
-      aValue = String(aValue).toLowerCase();
-      bValue = String(bValue).toLowerCase();
-
-      if (sortDirection === "asc") {
-        return aValue.localeCompare(bValue);
-      } else {
-        return bValue.localeCompare(aValue);
-      }
-    });
-  }, [employees?.employees, sortColumn, sortDirection]);
+    if (sortDirection === "asc") {
+      return aValue.localeCompare(bValue);
+    } else {
+      return bValue.localeCompare(aValue);
+    }
+  });
 
   // Get sort icon for column
   const getSortIcon = (column: SortColumn) => {
@@ -149,14 +187,6 @@ function EmployeeList() {
     }
     return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -191,19 +221,14 @@ function EmployeeList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Quản lý nhân viên
-          </h1>
-          <p className="text-gray-600">Danh sách và thông tin nhân viên</p>
-        </div>
-        {canManageEmployees && (
-          <Button onClick={() => navigate("/employees/new")}>
-            <Plus className="h-4 w-4 mr-2" />
-            Thêm nhân viên
-          </Button>
-        )}
+      <div>
+        <h1 className="text-2xl font-bold mb-2">
+          Bảng nhân viên với các trường mới
+        </h1>
+        <p className="text-gray-600">
+          Demo bảng quản lý nhân viên với các trường: Lương, Ngày vào làm, Trình
+          độ học vấn, Số điện thoại
+        </p>
       </div>
 
       <Card>
@@ -217,70 +242,61 @@ function EmployeeList() {
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
+              <input
+                type="text"
                 placeholder="Tìm kiếm theo tên hoặc mã NV..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            <Select
+            <select
               value={departmentFilter}
-              onValueChange={setDepartmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn phòng ban" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả phòng ban</SelectItem>
-                {departments?.departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id.toString()}>
-                    {dept.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="all">Tất cả phòng ban</option>
+              <option value="IT">IT</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+              <option value="Marketing">Marketing</option>
+            </select>
 
-            <Select value={regionFilter} onValueChange={setRegionFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn khu vực" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả khu vực</SelectItem>
-                {regions?.regions.map((region) => (
-                  <SelectItem key={region.id} value={region.id.toString()}>
-                    {region.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select
+              value={regionFilter}
+              onChange={(e) => setRegionFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Tất cả khu vực</option>
+              <option value="Hà Nội">Hà Nội</option>
+              <option value="TP.HCM">TP.HCM</option>
+              <option value="Đà Nẵng">Đà Nẵng</option>
+            </select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                <SelectItem value="active">Đang làm việc</SelectItem>
-                <SelectItem value="inactive">Tạm nghỉ</SelectItem>
-                <SelectItem value="terminated">Đã nghỉ việc</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="active">Đang làm việc</option>
+              <option value="inactive">Tạm nghỉ</option>
+              <option value="terminated">Đã nghỉ việc</option>
+            </select>
 
-            <Select value={educationFilter} onValueChange={setEducationFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn trình độ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả trình độ</SelectItem>
-                {Object.entries(EDUCATION_LEVELS).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>
-                    {value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select
+              value={educationFilter}
+              onChange={(e) => setEducationFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Tất cả trình độ</option>
+              {Object.entries(EDUCATION_LEVELS).map(([key, value]) => (
+                <option key={key} value={key}>
+                  {value}
+                </option>
+              ))}
+            </select>
 
             <Button
               variant="outline"
@@ -300,7 +316,7 @@ function EmployeeList() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách nhân viên ({employees?.total || 0})</CardTitle>
+          <CardTitle>Danh sách nhân viên ({sortedEmployees.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -408,24 +424,15 @@ function EmployeeList() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-3">
-                        {employee.photo_url ? (
-                          <img
-                            src={employee.photo_url}
-                            alt={employee.full_name}
-                            className="w-8 h-8 rounded-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                employee.full_name
-                              )}&background=3b82f6&color=fff&size=32`;
-                            }}
-                          />
-                        ) : (
-                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                            <User className="h-4 w-4 text-gray-400" />
-                          </div>
-                        )}
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-gray-400" />
+                        </div>
                         <button
-                          onClick={() => navigate(`/employees/${employee.id}`)}
+                          onClick={() =>
+                            console.log(
+                              `Viewing details for ${employee.full_name}`
+                            )
+                          }
                           className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-all duration-200 hover:scale-105 cursor-pointer"
                         >
                           {employee.full_name}
@@ -445,7 +452,7 @@ function EmployeeList() {
                     </td>
                     <td className="py-3 px-4">
                       {employee.hire_date
-                        ? formatDate(employee.hire_date as any)
+                        ? formatDate(employee.hire_date)
                         : "-"}
                     </td>
                     <td className="py-3 px-4">
@@ -458,26 +465,12 @@ function EmployeeList() {
                     <td className="py-3 px-4">{employee.phone || "-"}</td>
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/employees/${employee.id}`)}
-                        >
+                        <Button variant="ghost" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {canManageEmployees && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                navigate(`/employees/${employee.id}/edit`)
-                              }
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -493,17 +486,60 @@ function EmployeeList() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
 
-export function EmployeesPage() {
-  return (
-    <Routes>
-      <Route index element={<EmployeeList />} />
-      <Route path="new" element={<EmployeeForm />} />
-      <Route path=":id" element={<EmployeeDetail />} />
-      <Route path=":id/edit" element={<EmployeeForm />} />
-    </Routes>
+      <Card>
+        <CardHeader>
+          <CardTitle>Tính năng mới</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium mb-3">Các trường mới được thêm:</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  <strong>Lương:</strong> Hiển thị mức lương với định dạng tiền
+                  tệ VNĐ
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  <strong>Ngày vào làm:</strong> Hiển thị ngày bắt đầu làm việc
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                  <strong>Trình độ học vấn:</strong> Hiển thị trình độ với label
+                  tiếng Việt
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                  <strong>Số điện thoại:</strong> Hiển thị số liên lạc
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-3">Tính năng sắp xếp:</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  Sắp xếp theo tất cả các trường mới
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  Sắp xếp số (lương) theo thứ tự tăng/giảm
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                  Sắp xếp ngày tháng theo thứ tự thời gian
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                  Lọc theo trình độ học vấn
+                </li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
