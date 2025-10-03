@@ -47,6 +47,12 @@ export function EmployeeForm() {
     salary: "",
     status: "active",
     photo_url: "",
+    education_level: "",
+    school_name: "",
+    major: "",
+    graduation_year: "",
+    training_system: "",
+    degree_classification: "",
   });
 
   const [passwordReset, setPasswordReset] = useState({
@@ -69,6 +75,11 @@ export function EmployeeForm() {
   const { data: regions } = useQuery({
     queryKey: ["regions"],
     queryFn: () => backend.region.list(),
+  });
+
+  const { data: configs } = useQuery({
+    queryKey: ["system-config"],
+    queryFn: () => backend.config.get(),
   });
 
   useEffect(() => {
@@ -96,6 +107,12 @@ export function EmployeeForm() {
         salary: employee.salary?.toString() || "",
         status: employee.status,
         photo_url: employee.photo_url || "",
+        education_level: employee.education_level || "",
+        school_name: employee.school_name || "",
+        major: employee.major || "",
+        graduation_year: employee.graduation_year?.toString() || "",
+        training_system: employee.training_system || "",
+        degree_classification: employee.degree_classification || "",
       });
     }
   }, [employee]);
@@ -224,6 +241,31 @@ export function EmployeeForm() {
       photo_url:
         formData.photo_url && formData.photo_url.trim() !== ""
           ? formData.photo_url.trim()
+          : undefined,
+      education_level:
+        formData.education_level && formData.education_level.trim() !== ""
+          ? formData.education_level.trim()
+          : undefined,
+      school_name:
+        formData.school_name && formData.school_name.trim() !== ""
+          ? formData.school_name.trim()
+          : undefined,
+      major:
+        formData.major && formData.major.trim() !== ""
+          ? formData.major.trim()
+          : undefined,
+      graduation_year:
+        formData.graduation_year && formData.graduation_year.trim() !== ""
+          ? parseInt(formData.graduation_year)
+          : undefined,
+      training_system:
+        formData.training_system && formData.training_system.trim() !== ""
+          ? formData.training_system.trim()
+          : undefined,
+      degree_classification:
+        formData.degree_classification &&
+        formData.degree_classification.trim() !== ""
+          ? formData.degree_classification.trim()
           : undefined,
       email:
         formData.email && formData.email.trim() !== ""
@@ -417,6 +459,133 @@ export function EmployeeForm() {
                   onChange={(e) => handleInputChange("address", e.target.value)}
                   rows={3}
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="education_level">Trình độ học vấn</Label>
+                <Select
+                  value={formData.education_level}
+                  onValueChange={(value) =>
+                    handleInputChange("education_level", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn trình độ học vấn">
+                      {formData.education_level &&
+                      formData.education_level !== "none"
+                        ? formData.education_level
+                        : formData.education_level === "none"
+                        ? "Không có"
+                        : "Chọn trình độ học vấn"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Không có</SelectItem>
+                    {configs?.configs
+                      ?.find((c) => c.config_key === "education_levels")
+                      ?.config_value?.split(",")
+                      .map((level: string) => level.trim())
+                      .filter((level: string) => level.length > 0)
+                      .map((level: string) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="school_name">Tên trường</Label>
+                <Input
+                  id="school_name"
+                  value={formData.school_name}
+                  onChange={(e) =>
+                    handleInputChange("school_name", e.target.value)
+                  }
+                  placeholder="Tên trường đại học/cao đẳng"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="major">Chuyên ngành</Label>
+                <Input
+                  id="major"
+                  value={formData.major}
+                  onChange={(e) => handleInputChange("major", e.target.value)}
+                  placeholder="Tên chuyên ngành"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="graduation_year">Năm tốt nghiệp</Label>
+                <Input
+                  id="graduation_year"
+                  type="number"
+                  value={formData.graduation_year}
+                  onChange={(e) =>
+                    handleInputChange("graduation_year", e.target.value)
+                  }
+                  placeholder="Năm tốt nghiệp"
+                  min="1950"
+                  max={new Date().getFullYear() + 5}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="training_system">Hệ đào tạo</Label>
+                <Select
+                  value={formData.training_system}
+                  onValueChange={(value) =>
+                    handleInputChange("training_system", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn hệ đào tạo">
+                      {formData.training_system &&
+                      formData.training_system !== "none"
+                        ? formData.training_system
+                        : formData.training_system === "none"
+                        ? "Không có"
+                        : "Chọn hệ đào tạo"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Không có</SelectItem>
+                    <SelectItem value="Hệ chính quy">Hệ chính quy</SelectItem>
+                    <SelectItem value="Hệ không chính quy">
+                      Hệ không chính quy
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="degree_classification">Xếp loại bằng cấp</Label>
+                <Select
+                  value={formData.degree_classification}
+                  onValueChange={(value) =>
+                    handleInputChange("degree_classification", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn xếp loại">
+                      {formData.degree_classification &&
+                      formData.degree_classification !== "none"
+                        ? formData.degree_classification
+                        : formData.degree_classification === "none"
+                        ? "Không có"
+                        : "Chọn xếp loại"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Không có</SelectItem>
+                    <SelectItem value="Trung bình">Trung bình</SelectItem>
+                    <SelectItem value="Khá">Khá</SelectItem>
+                    <SelectItem value="Giỏi">Giỏi</SelectItem>
+                    <SelectItem value="Xuất sắc">Xuất sắc</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

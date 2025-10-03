@@ -42,7 +42,8 @@ export const create = api<CreateEmployeeRequest, Employee>(
     const employee = await db.queryRow<Employee>`
       INSERT INTO employees (
         user_id, employee_code, full_name, phone, address, date_of_birth,
-        hire_date, termination_date, position, department_id, region_id, salary, status, photo_url
+        hire_date, termination_date, position, department_id, region_id, salary, status, photo_url, education_level,
+        school_name, major, graduation_year, training_system, degree_classification
       )
       VALUES (
         ${userId}, ${req.employee_code}, ${req.full_name}, ${req.phone}, 
@@ -51,11 +52,15 @@ export const create = api<CreateEmployeeRequest, Employee>(
     }, ${req.position},
         ${req.department_id}, ${req.region_id}, ${req.salary}, ${
       req.status || "active"
-    }, ${req.photo_url}
+    }, ${req.photo_url}, ${req.education_level},
+        ${req.school_name}, ${req.major}, ${req.graduation_year}, ${
+      req.training_system
+    }, ${req.degree_classification}
       )
       RETURNING 
         id, user_id, employee_code, full_name, phone, address, date_of_birth,
-        hire_date, termination_date, position, department_id, region_id, salary, status, photo_url,
+        hire_date, termination_date, position, department_id, region_id, salary, status, photo_url, education_level,
+        school_name, major, graduation_year, training_system, degree_classification,
         created_at, updated_at
     `;
 

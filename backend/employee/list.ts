@@ -28,7 +28,8 @@ export const list = api<ListEmployeesRequest, ListEmployeesResponse>(
         SELECT 
           e.id, e.user_id, e.employee_code, e.full_name, e.phone, e.address,
           e.date_of_birth, e.hire_date, e.termination_date, e.position, e.department_id, e.region_id, e.salary,
-          e.status, e.photo_url, e.created_at, e.updated_at,
+          e.status, e.photo_url, e.education_level, e.school_name, e.major, e.graduation_year, e.training_system, e.degree_classification,
+          e.created_at, e.updated_at,
           d.name as department_name,
           r.name as region_name
         FROM employees e
@@ -91,8 +92,9 @@ export const list = api<ListEmployeesRequest, ListEmployeesResponse>(
       employees = await db.queryAll<Employee>`
         SELECT 
           e.id, e.user_id, e.employee_code, e.full_name, e.phone, e.address,
-          e.date_of_birth, e.hire_date, e.position, e.department_id, e.region_id, e.salary,
-          e.status, e.photo_url, e.created_at, e.updated_at,
+          e.date_of_birth, e.hire_date, e.termination_date, e.position, e.department_id, e.region_id, e.salary,
+          e.status, e.photo_url, e.education_level, e.school_name, e.major, e.graduation_year, e.training_system, e.degree_classification,
+          e.created_at, e.updated_at,
           d.name as department_name,
           r.name as region_name
         FROM employees e

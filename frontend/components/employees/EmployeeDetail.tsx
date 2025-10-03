@@ -206,6 +206,42 @@ export function EmployeeDetail() {
                     </span>
                   </div>
                 )}
+
+                {employee.education_level && (
+                  <div className="flex items-center space-x-3">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm">
+                      Trình độ: {employee.education_level}
+                    </span>
+                  </div>
+                )}
+
+                {employee.school_name && (
+                  <div className="flex items-center space-x-3">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm">
+                      Trường: {employee.school_name}
+                    </span>
+                  </div>
+                )}
+
+                {employee.major && (
+                  <div className="flex items-center space-x-3">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm">
+                      Chuyên ngành: {employee.major}
+                    </span>
+                  </div>
+                )}
+
+                {employee.graduation_year && (
+                  <div className="flex items-center space-x-3">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm">
+                      Năm tốt nghiệp: {employee.graduation_year}
+                    </span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -329,6 +365,50 @@ export function EmployeeDetail() {
                       <Label>Lương</Label>
                       <p className="font-medium text-green-600">
                         {formatCurrency(employee.salary)}
+                      </p>
+                    </div>
+                  )}
+
+                  {employee.education_level && (
+                    <div>
+                      <Label>Trình độ học vấn</Label>
+                      <p className="font-medium">{employee.education_level}</p>
+                    </div>
+                  )}
+
+                  {employee.school_name && (
+                    <div>
+                      <Label>Tên trường</Label>
+                      <p className="font-medium">{employee.school_name}</p>
+                    </div>
+                  )}
+
+                  {employee.major && (
+                    <div>
+                      <Label>Chuyên ngành</Label>
+                      <p className="font-medium">{employee.major}</p>
+                    </div>
+                  )}
+
+                  {employee.graduation_year && (
+                    <div>
+                      <Label>Năm tốt nghiệp</Label>
+                      <p className="font-medium">{employee.graduation_year}</p>
+                    </div>
+                  )}
+
+                  {employee.training_system && (
+                    <div>
+                      <Label>Hệ đào tạo</Label>
+                      <p className="font-medium">{employee.training_system}</p>
+                    </div>
+                  )}
+
+                  {employee.degree_classification && (
+                    <div>
+                      <Label>Xếp loại bằng cấp</Label>
+                      <p className="font-medium">
+                        {employee.degree_classification}
                       </p>
                     </div>
                   )}

@@ -36,7 +36,7 @@ const navigationSections: NavigationSection[] = [
     title: "",
     items: [
       {
-        name: "Dashboard",
+        name: "Thống kê tổng quát",
         href: "/dashboard",
         icon: LayoutDashboard,
         roles: ["admin", "director", "hr", "manager"],
