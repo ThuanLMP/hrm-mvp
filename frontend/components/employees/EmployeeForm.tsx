@@ -277,16 +277,13 @@ export function EmployeeForm() {
           : undefined,
     };
 
-    // Handle termination_date separately - always include it for updates
+    // Handle termination_date separately
     console.log("formData.termination_date:", formData.termination_date);
     if (formData.termination_date && formData.termination_date.trim() !== "") {
       submitData.termination_date = new Date(formData.termination_date);
       console.log("Setting termination_date to:", submitData.termination_date);
-    } else {
-      // For updates, we need to explicitly set null to clear the field
-      submitData.termination_date = null;
-      console.log("Setting termination_date to null");
     }
+    // Don't set termination_date to null for create operations
 
     console.log("Full submitData:", submitData);
 
@@ -294,29 +291,48 @@ export function EmployeeForm() {
       const { email, password, role, employee_code, hire_date, ...updateData } =
         submitData;
 
-      // Explicitly ensure termination_date is included
+      // For updates, explicitly set termination_date to null if not provided
       const finalUpdateData = {
         ...updateData,
-        termination_date: submitData.termination_date,
+        termination_date: submitData.termination_date || null,
+        // Ensure education fields are explicitly included
+        education_level: submitData.education_level,
+        school_name: submitData.school_name,
+        major: submitData.major,
+        graduation_year: submitData.graduation_year,
+        training_system: submitData.training_system,
+        degree_classification: submitData.degree_classification,
       };
 
       console.log("Update data being sent:", finalUpdateData);
-      console.log(
-        "termination_date specifically:",
-        finalUpdateData.termination_date
-      );
+      console.log("Education fields:", {
+        education_level: finalUpdateData.education_level,
+        school_name: finalUpdateData.school_name,
+        major: finalUpdateData.major,
+        graduation_year: finalUpdateData.graduation_year,
+        training_system: finalUpdateData.training_system,
+        degree_classification: finalUpdateData.degree_classification,
+      });
       updateMutation.mutate(finalUpdateData);
     } else {
-      // For create, ensure status is set to 'active' if not specified
+      // For create, don't include termination_date if not provided
       const createData = {
         ...submitData,
         status: submitData.status || "active",
       };
+
+      // Only include termination_date if it has a value
+      if (submitData.termination_date) {
+        createData.termination_date = submitData.termination_date;
+      }
+
+      console.log("Create data being sent:", createData);
       createMutation.mutate(createData);
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
+    console.log(`Updating field ${field} with value:`, value);
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

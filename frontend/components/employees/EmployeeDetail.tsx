@@ -368,50 +368,6 @@ export function EmployeeDetail() {
                       </p>
                     </div>
                   )}
-
-                  {employee.education_level && (
-                    <div>
-                      <Label>Trình độ học vấn</Label>
-                      <p className="font-medium">{employee.education_level}</p>
-                    </div>
-                  )}
-
-                  {employee.school_name && (
-                    <div>
-                      <Label>Tên trường</Label>
-                      <p className="font-medium">{employee.school_name}</p>
-                    </div>
-                  )}
-
-                  {employee.major && (
-                    <div>
-                      <Label>Chuyên ngành</Label>
-                      <p className="font-medium">{employee.major}</p>
-                    </div>
-                  )}
-
-                  {employee.graduation_year && (
-                    <div>
-                      <Label>Năm tốt nghiệp</Label>
-                      <p className="font-medium">{employee.graduation_year}</p>
-                    </div>
-                  )}
-
-                  {employee.training_system && (
-                    <div>
-                      <Label>Hệ đào tạo</Label>
-                      <p className="font-medium">{employee.training_system}</p>
-                    </div>
-                  )}
-
-                  {employee.degree_classification && (
-                    <div>
-                      <Label>Xếp loại bằng cấp</Label>
-                      <p className="font-medium">
-                        {employee.degree_classification}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>

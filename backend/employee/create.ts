@@ -48,7 +48,7 @@ export const create = api<CreateEmployeeRequest, Employee>(
       VALUES (
         ${userId}, ${req.employee_code}, ${req.full_name}, ${req.phone}, 
         ${req.address}, ${req.date_of_birth}, ${req.hire_date}, ${
-      req.termination_date
+      req.termination_date || null
     }, ${req.position},
         ${req.department_id}, ${req.region_id}, ${req.salary}, ${
       req.status || "active"

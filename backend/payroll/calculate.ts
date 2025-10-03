@@ -27,12 +27,12 @@ export const calculateMonthly = api<
       employee_code: string;
       full_name: string;
       position?: string;
-      salary_text: string;
+      salary: number;
       department_name?: string;
     }>`
       SELECT 
         e.id, e.employee_code, e.full_name, e.position, 
-        CAST(COALESCE(e.salary, 0) AS TEXT) as salary_text,
+        COALESCE(e.salary, 0) as salary,
         d.name as department_name
       FROM employees e
       LEFT JOIN departments d ON e.department_id = d.id
@@ -45,12 +45,12 @@ export const calculateMonthly = api<
       employee_code: string;
       full_name: string;
       position?: string;
-      salary_text: string;
+      salary: number;
       department_name?: string;
     }>`
       SELECT 
         e.id, e.employee_code, e.full_name, e.position, 
-        CAST(COALESCE(e.salary, 0) AS TEXT) as salary_text,
+        COALESCE(e.salary, 0) as salary,
         d.name as department_name
       FROM employees e
       LEFT JOIN departments d ON e.department_id = d.id
@@ -66,12 +66,12 @@ export const calculateMonthly = api<
     const attendanceResult = await db.queryRow<{
       total_records: number;
       work_days: number;
-      total_overtime_text: string;
+      total_overtime_hours: number;
     }>`
       SELECT 
         COUNT(*) as total_records,
         COUNT(CASE WHEN check_in IS NOT NULL AND check_out IS NOT NULL THEN 1 END) as work_days,
-        CAST(COALESCE(SUM(overtime_hours), 0) AS TEXT) as total_overtime_text
+        COALESCE(SUM(overtime_hours), 0) as total_overtime_hours
       FROM timesheets t
       WHERE t.employee_id = ${employee.id} 
         AND EXTRACT(MONTH FROM t.work_date) = ${month} 
@@ -109,12 +109,12 @@ export const calculateMonthly = api<
     const attendance = attendanceResult || {
       total_records: 0,
       work_days: 0,
-      total_overtime_text: "0",
+      total_overtime_hours: 0,
     };
 
-    // Parse numeric values from text
-    const salary = parseFloat(employee.salary_text) || 0;
-    const totalOvertimeHours = parseFloat(attendance.total_overtime_text) || 0;
+    // Use numeric values directly
+    const salary = employee.salary || 0;
+    const totalOvertimeHours = attendance.total_overtime_hours || 0;
 
     // Calculate attendance metrics
     const lateCount = statusResults.filter(
