@@ -9,9 +9,11 @@ export const create = api<CreateLeaveRequest, LeaveRequest>(
     // Validate dates
     const startDate = new Date(req.start_date);
     const endDate = new Date(req.end_date);
-    
+
     if (endDate < startDate) {
-      throw APIError.invalidArgument("Ngày kết thúc không thể sớm hơn ngày bắt đầu");
+      throw APIError.invalidArgument(
+        "Ngày kết thúc không thể sớm hơn ngày bắt đầu"
+      );
     }
 
     // Calculate total days
@@ -31,7 +33,9 @@ export const create = api<CreateLeaveRequest, LeaveRequest>(
     `;
 
     if (overlapping) {
-      throw APIError.failedPrecondition("Đã có đơn xin nghỉ trong khoảng thời gian này");
+      throw APIError.failedPrecondition(
+        "Đã có đơn xin nghỉ trong khoảng thời gian này"
+      );
     }
 
     // Create leave request
@@ -54,7 +58,10 @@ export const create = api<CreateLeaveRequest, LeaveRequest>(
     }
 
     // Get employee info
-    const employee = await db.queryRow<{ full_name: string; employee_code: string }>`
+    const employee = await db.queryRow<{
+      full_name: string;
+      employee_code: string;
+    }>`
       SELECT full_name, employee_code FROM employees WHERE id = ${req.employee_id}
     `;
 

@@ -130,10 +130,8 @@ export function EmployeeForm() {
         annual_leave_days: employee.annual_leave_days?.toString() || "",
         sick_leave_days: employee.sick_leave_days?.toString() || "",
       });
-      console.log(formData);
     }
   }, [employee]);
-
   const createMutation = useMutation({
     mutationFn: (data: any) => backend.employee.create(data),
     onSuccess: () => {
@@ -155,8 +153,9 @@ export function EmployeeForm() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) =>
-      backend.employee.update({ id: parseInt(id!), ...data }),
+    mutationFn: (data: any) => {
+      return backend.employee.update({ id: parseInt(id!), ...data });
+    },
     onSuccess: () => {
       toast({
         title: "Thành công",
@@ -494,26 +493,16 @@ export function EmployeeForm() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Chọn trình độ học vấn">
-                        {formData.education_level &&
-                        formData.education_level !== "none"
-                          ? EDUCATION_LEVELS[
-                              formData.education_level as keyof typeof EDUCATION_LEVELS
-                            ]
-                          : formData.education_level === "none"
-                          ? "Không có"
-                          : "Chọn trình độ học vấn"}
-                      </SelectValue>
+                      <SelectValue placeholder="Chọn trình độ học vấn" />
                     </SelectTrigger>
+
                     <SelectContent>
                       <SelectItem value="none">Không có</SelectItem>
-                      {Object.entries(EDUCATION_LEVELS).map(
-                        ([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        )
-                      )}
+                      {Object.entries(EDUCATION_LEVELS).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

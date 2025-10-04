@@ -1,5 +1,10 @@
-export type LeaveType = 'annual' | 'sick' | 'personal' | 'maternity' | 'emergency';
-export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+export type LeaveType =
+  | "annual"
+  | "sick"
+  | "personal"
+  | "maternity"
+  | "emergency";
+export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled";
 
 export interface LeaveRequest {
   id: number;
@@ -43,12 +48,12 @@ export interface LeaveBalance {
   employee_id: number;
   employee_name: string;
   employee_code: string;
-  annual_leave_total: number;    // Total annual leave days per year
-  annual_leave_used: number;     // Used annual leave days this year
+  annual_leave_total: number; // Total annual leave days per year
+  annual_leave_used: number; // Used annual leave days this year
   annual_leave_remaining: number; // Remaining annual leave days
-  sick_leave_total: number;      // Total sick leave days per year
-  sick_leave_used: number;       // Used sick leave days this year
-  sick_leave_remaining: number;  // Remaining sick leave days
+  sick_leave_total: number; // Total sick leave days per year
+  sick_leave_used: number; // Used sick leave days this year
+  sick_leave_remaining: number; // Remaining sick leave days
   year: number;
 }
 

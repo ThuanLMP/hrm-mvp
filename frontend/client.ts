@@ -340,7 +340,6 @@ export namespace dashboard {
  * Import the endpoint handlers to derive the types for the client.
  */
 import { create as api_department_create_create } from "~backend/department/create";
-import { deleteDepartment as api_department_delete_deleteDepartment } from "~backend/department/delete";
 import { get as api_department_get_get } from "~backend/department/get";
 import { list as api_department_list_list } from "~backend/department/list";
 import { update as api_department_update_update } from "~backend/department/update";
@@ -415,7 +414,6 @@ export namespace department {
  * Import the endpoint handlers to derive the types for the client.
  */
 import { create as api_employee_create_create } from "~backend/employee/create";
-import { deleteEmployee as api_employee_delete_deleteEmployee } from "~backend/employee/delete";
 import { get as api_employee_get_get } from "~backend/employee/get";
 import { list as api_employee_list_list } from "~backend/employee/list";
 import { update as api_employee_update_update } from "~backend/employee/update";
@@ -484,6 +482,7 @@ export namespace employee {
         public async update(params: RequestType<typeof api_employee_update_update>): Promise<ResponseType<typeof api_employee_update_update>> {
             // Construct the body with only the fields which we want encoded within the body (excluding query string or header fields)
             const body: Record<string, any> = {
+                ...params,
                 address:         params.address,
                 "date_of_birth": params["date_of_birth"],
                 "department_id": params["department_id"],
@@ -1209,9 +1208,9 @@ function makeRecord<K extends string | number | symbol, V>(record: Record<K, V |
 }
 
 import {
-  StreamInOutHandlerFn,
-  StreamInHandlerFn,
-  StreamOutHandlerFn,
+    StreamInHandlerFn,
+    StreamInOutHandlerFn,
+    StreamOutHandlerFn,
 } from "encore.dev/api";
 
 type StreamRequest<Type> = Type extends
